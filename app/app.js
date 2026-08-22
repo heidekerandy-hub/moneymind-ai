@@ -1,14 +1,15 @@
-// ==========================================
+// ============================
 // DELETE FUNCTIONS
-// ==========================================
+// ============================
 
 function deleteTransaction(id) {
+
   if (!confirm("Are you sure you want to delete this transaction?")) {
     return;
   }
 
-  transactions = transactions.filter(function (item) {
-    return item.id !== id;
+  transactions = transactions.filter(function(transaction) {
+    return transaction.id !== id;
   });
 
   saveData();
@@ -18,12 +19,13 @@ function deleteTransaction(id) {
 
 
 function deleteGoal(id) {
+
   if (!confirm("Are you sure you want to delete this savings goal?")) {
     return;
   }
 
-  goals = goals.filter(function (item) {
-    return item.id !== id;
+  goals = goals.filter(function(goal) {
+    return goal.id !== id;
   });
 
   saveData();
@@ -32,12 +34,13 @@ function deleteGoal(id) {
 
 
 function deleteInvestment(id) {
+
   if (!confirm("Are you sure you want to delete this investment?")) {
     return;
   }
 
-  investments = investments.filter(function (item) {
-    return item.id !== id;
+  investments = investments.filter(function(investment) {
+    return investment.id !== id;
   });
 
   saveData();
@@ -45,7 +48,7 @@ function deleteInvestment(id) {
 }
 
 
-// Make them available to HTML buttons
+// Make functions available to HTML
 window.deleteTransaction = deleteTransaction;
 window.deleteGoal = deleteGoal;
 window.deleteInvestment = deleteInvestment;
