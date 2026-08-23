@@ -4,8 +4,12 @@
 let transactions = [];
 let goals = [];
 let investments = [];
-async function askAI() {
 
+console.log("MoneyMind DATA CHECK:", {
+  transactionsIsArray: Array.isArray(transactions),
+  transactionsType: typeof transactions,
+  transactions: transactions
+});
   const input =
     document.getElementById("aiInput");
 
