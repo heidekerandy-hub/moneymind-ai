@@ -1,19 +1,21 @@
 // ======================================================
-// MONEY MIND AI - CLEAN COMPLETE APP.JS
+// MONEY MIND AI - COMPLETE WORKING APP.JS
+// Personalized Financial Analysis Edition
 // ======================================================
+
 
 // ======================================================
 // SUPABASE
 // ======================================================
 
-const supabaseClient = window.supabaseClient;
+const supabaseClient = window.supabaseClient || null;
 
 const AI_URL =
   "https://pgbetpprhyrplrzxjzvb.supabase.co/functions/v1/smart-responder";
 
 
 // ======================================================
-// DATA STORAGE
+// LOCAL STORAGE
 // ======================================================
 
 function loadArray(key) {
@@ -26,17 +28,12 @@ function loadArray(key) {
 
     const parsed = JSON.parse(saved);
 
-    // IMPORTANT:
-    // Only accept arrays.
-    // This prevents:
-    // transactions.filter is not a function
-
     if (Array.isArray(parsed)) {
       return parsed;
     }
 
     console.warn(
-      key + " was not an array. Resetting it."
+      `${key} is not an array. Resetting it.`
     );
 
     localStorage.removeItem(key);
@@ -46,7 +43,7 @@ function loadArray(key) {
   } catch (error) {
 
     console.error(
-      "Error loading " + key,
+      `Failed to load ${key}:`,
       error
     );
 
@@ -57,14 +54,9 @@ function loadArray(key) {
 }
 
 
-let transactions =
-  loadArray("mm_transactions");
-
-let goals =
-  loadArray("mm_goals");
-
-let investments =
-  loadArray("mm_investments");
+let transactions = loadArray("mm_transactions");
+let goals = loadArray("mm_goals");
+let investments = loadArray("mm_investments");
 
 
 // ======================================================
@@ -73,20 +65,30 @@ let investments =
 
 function saveData() {
 
-  localStorage.setItem(
-    "mm_transactions",
-    JSON.stringify(transactions)
-  );
+  try {
 
-  localStorage.setItem(
-    "mm_goals",
-    JSON.stringify(goals)
-  );
+    localStorage.setItem(
+      "mm_transactions",
+      JSON.stringify(transactions)
+    );
 
-  localStorage.setItem(
-    "mm_investments",
-    JSON.stringify(investments)
-  );
+    localStorage.setItem(
+      "mm_goals",
+      JSON.stringify(goals)
+    );
+
+    localStorage.setItem(
+      "mm_investments",
+      JSON.stringify(investments)
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Could not save MoneyMind data:",
+      error
+    );
+  }
 }
 
 
@@ -100,53 +102,59 @@ async function checkAuth() {
     document.getElementById("authScreen");
 
   if (!authScreen) {
-    return;
+    return null;
   }
 
   if (!supabaseClient) {
 
-    console.error(
-      "Supabase client is missing."
+    console.warn(
+      "Supabase client is not available."
     );
 
     authScreen.style.display = "flex";
 
-    return;
+    return null;
   }
 
   try {
 
-    const {
-      data,
-      error
-    } =
+    const result =
       await supabaseClient.auth.getSession();
+
+    const session =
+      result?.data?.session;
+
+    const error =
+      result?.error;
 
     if (error) {
 
       console.error(
-        "Session error:",
+        "Supabase session error:",
         error
       );
 
       authScreen.style.display = "flex";
 
-      return;
+      return null;
     }
 
-    if (data.session) {
+    if (session) {
 
       authScreen.style.display = "none";
 
       console.log(
         "Logged in:",
-        data.session.user.email
+        session.user?.email
       );
 
-    } else {
+      return session;
 
-      authScreen.style.display = "flex";
     }
+
+    authScreen.style.display = "flex";
+
+    return null;
 
   } catch (error) {
 
@@ -156,6 +164,8 @@ async function checkAuth() {
     );
 
     authScreen.style.display = "flex";
+
+    return null;
   }
 }
 
@@ -210,7 +220,7 @@ async function signupUser() {
   }
 
   message.textContent =
-    "Creating your account...";
+    "Creating your MoneyMind account...";
 
   try {
 
@@ -219,8 +229,8 @@ async function signupUser() {
       error
     } =
       await supabaseClient.auth.signUp({
-        email: email,
-        password: password
+        email,
+        password
       });
 
     if (error) {
@@ -236,7 +246,7 @@ async function signupUser() {
       return;
     }
 
-    if (data.session) {
+    if (data?.session) {
 
       message.textContent =
         "Account created successfully.";
@@ -257,7 +267,7 @@ async function signupUser() {
     );
 
     message.textContent =
-      "Unable to create account. Please try again.";
+      "Unable to create your account. Please try again.";
   }
 }
 
@@ -313,8 +323,8 @@ async function loginUser() {
       error
     } =
       await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
+        email,
+        password
       });
 
     if (error) {
@@ -330,11 +340,6 @@ async function loginUser() {
       return;
     }
 
-    console.log(
-      "Login successful:",
-      data.user?.email
-    );
-
     message.textContent =
       "Login successful.";
 
@@ -344,6 +349,11 @@ async function loginUser() {
     if (authScreen) {
       authScreen.style.display = "none";
     }
+
+    console.log(
+      "Logged in:",
+      data?.user?.email
+    );
 
   } catch (error) {
 
@@ -359,7 +369,53 @@ async function loginUser() {
 
 
 // ======================================================
-// AUTH SCREEN
+// LOGOUT
+// ======================================================
+
+async function logoutUser() {
+
+  if (!supabaseClient) {
+    return;
+  }
+
+  try {
+
+    const {
+      error
+    } =
+      await supabaseClient.auth.signOut();
+
+    if (error) {
+      console.error(
+        "Logout error:",
+        error
+      );
+      return;
+    }
+
+    console.log(
+      "MoneyMind user logged out."
+    );
+
+    const authScreen =
+      document.getElementById("authScreen");
+
+    if (authScreen) {
+      authScreen.style.display = "flex";
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Logout failed:",
+      error
+    );
+  }
+}
+
+
+// ======================================================
+// AUTH SCREEN SWITCHING
 // ======================================================
 
 function showSignup() {
@@ -418,23 +474,18 @@ function showLogin() {
 
 function showSection(sectionId) {
 
-  const sections =
-    document.querySelectorAll(".section");
+  document
+    .querySelectorAll(".section")
+    .forEach(function(section) {
 
-  sections.forEach(function(section) {
+      section.classList.remove("active");
 
-    section.classList.remove("active");
-
-  });
+    });
 
   const section =
     document.getElementById(sectionId);
 
-  if (section) {
-
-    section.classList.add("active");
-
-  } else {
+  if (!section) {
 
     console.warn(
       "Section not found:",
@@ -443,6 +494,8 @@ function showSection(sectionId) {
 
     return;
   }
+
+  section.classList.add("active");
 
   const menu =
     document.getElementById("mobileMenu");
@@ -468,30 +521,21 @@ function toggleMenu() {
     document.getElementById("mobileMenu");
 
   if (!menu) {
-
-    console.warn(
-      "mobileMenu element not found."
-    );
-
     return;
   }
 
-  const current =
+  const display =
     window.getComputedStyle(menu).display;
 
-  if (current === "none") {
-
-    menu.style.display = "flex";
-
-  } else {
-
-    menu.style.display = "none";
-  }
+  menu.style.display =
+    display === "none"
+      ? "flex"
+      : "none";
 }
 
 
 // ======================================================
-// FORMAT MONEY
+// MONEY FORMAT
 // ======================================================
 
 function formatMoney(amount) {
@@ -511,10 +555,14 @@ function formatMoney(amount) {
 
 
 // ======================================================
-// FORMAT DATE
+// DATE FORMAT
 // ======================================================
 
 function formatDate(date) {
+
+  if (!date) {
+    return "";
+  }
 
   const parsed =
     new Date(date);
@@ -555,22 +603,42 @@ function escapeHTML(value) {
 
 
 // ======================================================
-// DASHBOARD
+// SAFE TRANSACTION TYPE
 // ======================================================
 
-function updateDashboard() {
+function getTransactionType(transaction) {
 
-  // Safety check
+  return transaction?.type === "income"
+    ? "income"
+    : "expense";
+}
+
+
+// ======================================================
+// FINANCIAL CALCULATIONS
+// ======================================================
+
+function calculateFinancialData() {
 
   if (!Array.isArray(transactions)) {
     transactions = [];
   }
 
+  if (!Array.isArray(goals)) {
+    goals = [];
+  }
+
+  if (!Array.isArray(investments)) {
+    investments = [];
+  }
+
+
   const income =
     transactions
       .filter(function(transaction) {
 
-        return transaction.type === "income";
+        return getTransactionType(transaction)
+          === "income";
 
       })
       .reduce(function(sum, transaction) {
@@ -585,7 +653,8 @@ function updateDashboard() {
     transactions
       .filter(function(transaction) {
 
-        return transaction.type === "expense";
+        return getTransactionType(transaction)
+          === "expense";
 
       })
       .reduce(function(sum, transaction) {
@@ -598,6 +667,141 @@ function updateDashboard() {
 
   const balance =
     income - expenses;
+
+
+  const savingsRate =
+    income > 0
+      ? (balance / income) * 100
+      : 0;
+
+
+  const invested =
+    investments.reduce(
+      function(sum, investment) {
+
+        return sum +
+          Number(
+            investment.amount || 0
+          );
+
+      },
+      0
+    );
+
+
+  const investmentValue =
+    investments.reduce(
+      function(sum, investment) {
+
+        return sum +
+          Number(
+            investment.value || 0
+          );
+
+      },
+      0
+    );
+
+
+  const investmentGain =
+    investmentValue - invested;
+
+
+  const investmentReturn =
+    invested > 0
+      ? (investmentGain / invested) * 100
+      : 0;
+
+
+  const goalProgress =
+    goals.map(function(goal) {
+
+      const target =
+        Number(goal.target) || 0;
+
+      const saved =
+        Number(goal.saved) || 0;
+
+      const percentage =
+        target > 0
+          ? Math.min(
+              100,
+              (saved / target) * 100
+            )
+          : 0;
+
+      return {
+        name: goal.name || "Unnamed goal",
+        target,
+        saved,
+        remaining:
+          Math.max(
+            0,
+            target - saved
+          ),
+        percentage:
+          Number(
+            percentage.toFixed(1)
+          )
+      };
+
+    });
+
+
+  return {
+
+    income,
+
+    expenses,
+
+    balance,
+
+    savingsRate:
+      Number(
+        savingsRate.toFixed(1)
+      ),
+
+    invested,
+
+    investmentValue,
+
+    investmentGain,
+
+    investmentReturn:
+      Number(
+        investmentReturn.toFixed(1)
+      ),
+
+    transactionCount:
+      transactions.length,
+
+    goalCount:
+      goals.length,
+
+    investmentCount:
+      investments.length,
+
+    goals:
+      goalProgress,
+
+    transactions:
+      transactions,
+
+    investments:
+      investments
+
+  };
+}
+
+
+// ======================================================
+// DASHBOARD
+// ======================================================
+
+function updateDashboard() {
+
+  const financial =
+    calculateFinancialData();
 
 
   const incomeElement =
@@ -613,31 +817,35 @@ function updateDashboard() {
   if (incomeElement) {
 
     incomeElement.textContent =
-      formatMoney(income);
-
+      formatMoney(
+        financial.income
+      );
   }
 
 
   if (expenseElement) {
 
     expenseElement.textContent =
-      formatMoney(expenses);
-
+      formatMoney(
+        financial.expenses
+      );
   }
 
 
   if (balanceElement) {
 
     balanceElement.textContent =
-      formatMoney(balance);
-
+      formatMoney(
+        financial.balance
+      );
   }
 
 
   updateHealth(
-    income,
-    expenses
+    financial.income,
+    financial.expenses
   );
+
 
   renderRecentTransactions();
 }
@@ -653,6 +861,7 @@ function updateHealth(
 ) {
 
   let score = 0;
+
 
   if (income > 0) {
 
@@ -684,13 +893,19 @@ function updateHealth(
 
 
   const scoreElement =
-    document.getElementById("healthScore");
+    document.getElementById(
+      "healthScore"
+    );
 
   const title =
-    document.getElementById("healthTitle");
+    document.getElementById(
+      "healthTitle"
+    );
 
   const message =
-    document.getElementById("healthMessage");
+    document.getElementById(
+      "healthMessage"
+    );
 
 
   if (scoreElement) {
@@ -719,7 +934,7 @@ function updateHealth(
       "Good financial health";
 
     message.textContent =
-      "You're doing well. Look for opportunities to increase savings.";
+      "You're doing well. Look for opportunities to increase your savings.";
 
   } else if (score >= 50) {
 
@@ -735,7 +950,7 @@ function updateHealth(
       "Warning";
 
     message.textContent =
-      "Your spending may be higher than your income.";
+      "Your spending is currently higher than your income.";
 
   } else {
 
@@ -760,7 +975,6 @@ function openTransactionModal() {
     );
 
   if (modal) {
-
     modal.classList.add("show");
   }
 }
@@ -800,7 +1014,7 @@ function addTransaction() {
 
   if (
     !description ||
-    !amount ||
+    !Number.isFinite(amount) ||
     amount <= 0
   ) {
 
@@ -819,17 +1033,25 @@ function addTransaction() {
 
   transactions.unshift({
 
-    id: Date.now(),
+    id:
+      Date.now() +
+      Math.floor(
+        Math.random() * 1000
+      ),
 
-    type: type,
+    type:
+      type === "income"
+        ? "income"
+        : "expense",
 
-    description: description,
+    description,
 
-    amount: amount,
+    amount,
 
-    category: category,
+    category,
 
-    date: new Date().toISOString()
+    date:
+      new Date().toISOString()
 
   });
 
@@ -860,6 +1082,7 @@ function addTransaction() {
   closeModal(
     "transactionModal"
   );
+
 
   renderTransactions();
 
@@ -907,7 +1130,7 @@ function deleteTransaction(id) {
 
 
 // ======================================================
-// RENDER ALL TRANSACTIONS
+// RENDER TRANSACTIONS
 // ======================================================
 
 function renderTransactions() {
@@ -938,8 +1161,13 @@ function renderTransactions() {
     transactions
       .map(function(transaction) {
 
+        const type =
+          getTransactionType(
+            transaction
+          );
+
         const sign =
-          transaction.type === "income"
+          type === "income"
             ? "+"
             : "-";
 
@@ -957,7 +1185,8 @@ function renderTransactions() {
 
               <small>
                 ${escapeHTML(
-                  transaction.category || "Other"
+                  transaction.category ||
+                  "Other"
                 )}
                 •
                 ${formatDate(
@@ -967,7 +1196,7 @@ function renderTransactions() {
 
             </div>
 
-            <div class="${transaction.type}">
+            <div class="${type}">
               ${sign}
               ${formatMoney(
                 transaction.amount
@@ -976,7 +1205,7 @@ function renderTransactions() {
 
             <button
               class="delete-btn"
-              onclick="window.deleteTransaction(${transaction.id})"
+              onclick="window.deleteTransaction(${Number(transaction.id)})"
             >
               Delete
             </button>
@@ -1024,8 +1253,13 @@ function renderRecentTransactions() {
     recent
       .map(function(transaction) {
 
+        const type =
+          getTransactionType(
+            transaction
+          );
+
         const sign =
-          transaction.type === "income"
+          type === "income"
             ? "+"
             : "-";
 
@@ -1043,7 +1277,8 @@ function renderRecentTransactions() {
 
               <small>
                 ${escapeHTML(
-                  transaction.category || "Other"
+                  transaction.category ||
+                  "Other"
                 )}
                 •
                 ${formatDate(
@@ -1053,7 +1288,7 @@ function renderRecentTransactions() {
 
             </div>
 
-            <div class="${transaction.type}">
+            <div class="${type}">
               ${sign}
               ${formatMoney(
                 transaction.amount
@@ -1069,7 +1304,7 @@ function renderRecentTransactions() {
 
 
 // ======================================================
-// GOALS
+// SAVINGS GOALS
 // ======================================================
 
 function openGoalModal() {
@@ -1111,12 +1346,12 @@ function addGoal() {
 
   if (
     !name ||
-    !target ||
+    !Number.isFinite(target) ||
     target <= 0
   ) {
 
     alert(
-      "Please enter a goal name and target amount."
+      "Please enter a goal name and valid target amount."
     );
 
     return;
@@ -1130,13 +1365,21 @@ function addGoal() {
 
   goals.push({
 
-    id: Date.now(),
+    id:
+      Date.now() +
+      Math.floor(
+        Math.random() * 1000
+      ),
 
-    name: name,
+    name,
 
-    target: target,
+    target,
 
-    saved: Math.max(0, saved)
+    saved:
+      Math.max(
+        0,
+        saved
+      )
 
   });
 
@@ -1144,17 +1387,33 @@ function addGoal() {
   saveData();
 
 
-  document.getElementById(
-    "goalName"
-  ).value = "";
+  const nameInput =
+    document.getElementById(
+      "goalName"
+    );
 
-  document.getElementById(
-    "goalTarget"
-  ).value = "";
+  const targetInput =
+    document.getElementById(
+      "goalTarget"
+    );
 
-  document.getElementById(
-    "goalSaved"
-  ).value = "";
+  const savedInput =
+    document.getElementById(
+      "goalSaved"
+    );
+
+
+  if (nameInput) {
+    nameInput.value = "";
+  }
+
+  if (targetInput) {
+    targetInput.value = "";
+  }
+
+  if (savedInput) {
+    savedInput.value = "";
+  }
 
 
   closeModal("goalModal");
@@ -1236,7 +1495,8 @@ function renderGoals() {
             ? Math.min(
                 100,
                 Math.round(
-                  (saved / target) * 100
+                  (saved / target) *
+                  100
                 )
               )
             : 0;
@@ -1274,7 +1534,7 @@ function renderGoals() {
 
             <button
               class="delete-btn"
-              onclick="window.deleteGoal(${goal.id})"
+              onclick="window.deleteGoal(${Number(goal.id)})"
             >
               Delete
             </button>
@@ -1330,7 +1590,7 @@ function addInvestment() {
 
   if (
     !name ||
-    !amount ||
+    !Number.isFinite(amount) ||
     amount <= 0
   ) {
 
@@ -1349,13 +1609,18 @@ function addInvestment() {
 
   investments.push({
 
-    id: Date.now(),
+    id:
+      Date.now() +
+      Math.floor(
+        Math.random() * 1000
+      ),
 
-    name: name,
+    name,
 
-    amount: amount,
+    amount,
 
     value:
+      Number.isFinite(value) &&
       value > 0
         ? value
         : amount
@@ -1366,17 +1631,33 @@ function addInvestment() {
   saveData();
 
 
-  document.getElementById(
-    "investmentName"
-  ).value = "";
+  const nameInput =
+    document.getElementById(
+      "investmentName"
+    );
 
-  document.getElementById(
-    "investmentAmount"
-  ).value = "";
+  const amountInput =
+    document.getElementById(
+      "investmentAmount"
+    );
 
-  document.getElementById(
-    "investmentValue"
-  ).value = "";
+  const valueInput =
+    document.getElementById(
+      "investmentValue"
+    );
+
+
+  if (nameInput) {
+    nameInput.value = "";
+  }
+
+  if (amountInput) {
+    amountInput.value = "";
+  }
+
+  if (valueInput) {
+    valueInput.value = "";
+  }
 
 
   closeModal(
@@ -1453,15 +1734,19 @@ function renderInvestments() {
             investment.amount || 0
           );
 
-
         const value =
           Number(
             investment.value || 0
           );
 
-
         const gain =
           value - invested;
+
+
+        const returnPercent =
+          invested > 0
+            ? (gain / invested) * 100
+            : 0;
 
 
         return `
@@ -1475,12 +1760,16 @@ function renderInvestments() {
 
             <p>
               Invested:
-              ${formatMoney(invested)}
+              ${formatMoney(
+                invested
+              )}
             </p>
 
             <p>
               Current value:
-              ${formatMoney(value)}
+              ${formatMoney(
+                value
+              )}
             </p>
 
             <strong
@@ -1492,13 +1781,14 @@ function renderInvestments() {
             >
               ${gain >= 0 ? "+" : ""}
               ${formatMoney(gain)}
+              (${returnPercent.toFixed(1)}%)
             </strong>
 
             <br><br>
 
             <button
               class="delete-btn"
-              onclick="window.deleteInvestment(${investment.id})"
+              onclick="window.deleteInvestment(${Number(investment.id)})"
             >
               Delete
             </button>
@@ -1508,6 +1798,188 @@ function renderInvestments() {
 
       })
       .join("");
+}
+
+
+// ======================================================
+// BUILD PERSONALIZED AI PROFILE
+// ======================================================
+
+function buildPersonalizedProfile(financial) {
+
+  const profile = {
+
+    financialPosition:
+      financial.balance >= 0
+        ? "positive"
+        : "deficit",
+
+    savingsStatus:
+      financial.savingsRate >= 20
+        ? "strong"
+        : financial.savingsRate >= 10
+          ? "moderate"
+          : "weak",
+
+    investmentStatus:
+      financial.invested > 0
+        ? "has investments"
+        : "no investments recorded",
+
+    goalStatus:
+      financial.goalCount > 0
+        ? "has savings goals"
+        : "no savings goals recorded",
+
+    riskFlag:
+      financial.balance < 0
+        ? "HIGH"
+        : financial.savingsRate < 10
+          ? "MEDIUM"
+          : "LOW"
+
+  };
+
+
+  return profile;
+}
+
+
+// ======================================================
+// CREATE AI FINANCIAL SNAPSHOT
+// ======================================================
+
+function createAIFinancialSnapshot() {
+
+  const financial =
+    calculateFinancialData();
+
+
+  const profile =
+    buildPersonalizedProfile(
+      financial
+    );
+
+
+  return {
+
+    currency:
+      "NGN",
+
+    financialSummary: {
+
+      totalIncome:
+        financial.income,
+
+      totalExpenses:
+        financial.expenses,
+
+      availableBalance:
+        financial.balance,
+
+      savingsRate:
+        financial.savingsRate,
+
+      totalInvested:
+        financial.invested,
+
+      investmentValue:
+        financial.investmentValue,
+
+      investmentGain:
+        financial.investmentGain,
+
+      investmentReturn:
+        financial.investmentReturn
+
+    },
+
+    financialProfile:
+      profile,
+
+    savingsGoals:
+      financial.goals,
+
+    recentTransactions:
+      financial.transactions.slice(
+        0,
+        30
+      ),
+
+    investments:
+      financial.investments,
+
+    accountStatistics: {
+
+      transactionCount:
+        financial.transactionCount,
+
+      goalCount:
+        financial.goalCount,
+
+      investmentCount:
+        financial.investmentCount
+
+    }
+
+  };
+}
+
+
+// ======================================================
+// AI RESPONSE EXTRACTION
+// ======================================================
+
+function extractAIReply(data) {
+
+  if (!data) {
+
+    return "No response was returned by MoneyMind AI.";
+  }
+
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+
+  if (
+    typeof data.reply === "string" &&
+    data.reply.trim()
+  ) {
+
+    return data.reply;
+  }
+
+
+  if (
+    typeof data.message === "string" &&
+    data.message.trim()
+  ) {
+
+    return data.message;
+  }
+
+
+  if (
+    typeof data.response === "string" &&
+    data.response.trim()
+  ) {
+
+    return data.response;
+  }
+
+
+  if (
+    data.data &&
+    typeof data.data.reply === "string"
+  ) {
+
+    return data.data.reply;
+  }
+
+
+  return "I received your financial information, but I could not generate an analysis.";
 }
 
 
@@ -1547,18 +2019,21 @@ async function askAI() {
   }
 
 
-  // Show user's message
+  // ----------------------------------------------------
+  // SHOW USER MESSAGE
+  // ----------------------------------------------------
 
   addChatMessage(
     question,
     "user"
   );
 
-
   input.value = "";
 
 
-  // AI thinking message
+  // ----------------------------------------------------
+  // THINKING MESSAGE
+  // ----------------------------------------------------
 
   const thinking =
     document.createElement("div");
@@ -1567,174 +2042,63 @@ async function askAI() {
     "message ai";
 
   thinking.textContent =
-    "MoneyMind AI is thinking...";
+    "MoneyMind AI is analyzing your finances...";
 
   chat.appendChild(
     thinking
   );
 
-
   chat.scrollTop =
     chat.scrollHeight;
 
 
-  // ====================================================
-  // ALWAYS GUARANTEE ARRAYS
-  // ====================================================
+  // ----------------------------------------------------
+  // CREATE PERSONALIZED FINANCIAL DATA
+  // ----------------------------------------------------
 
-  if (!Array.isArray(transactions)) {
-    transactions = [];
-  }
-
-  if (!Array.isArray(goals)) {
-    goals = [];
-  }
-
-  if (!Array.isArray(investments)) {
-    investments = [];
-  }
+  const financialData =
+    createAIFinancialSnapshot();
 
 
-  // ====================================================
-  // CALCULATE FINANCIAL DATA
-  // ====================================================
+  console.log(
+    "MoneyMind personalized financial snapshot:",
+    financialData
+  );
 
-  const income =
-    transactions
-      .filter(function(transaction) {
-
-        return transaction.type === "income";
-
-      })
-      .reduce(function(sum, transaction) {
-
-        return sum +
-          Number(transaction.amount || 0);
-
-      }, 0);
-
-
-  const expenses =
-    transactions
-      .filter(function(transaction) {
-
-        return transaction.type === "expense";
-
-      })
-      .reduce(function(sum, transaction) {
-
-        return sum +
-          Number(transaction.amount || 0);
-
-      }, 0);
-
-
-  const balance =
-    income - expenses;
-
-
-  const savingsRate =
-    income > 0
-      ? (balance / income) * 100
-      : 0;
-
-
-  const invested =
-    investments.reduce(
-      function(sum, investment) {
-
-        return sum +
-          Number(
-            investment.amount || 0
-          );
-
-      },
-      0
-    );
-
-
-  const investmentValue =
-    investments.reduce(
-      function(sum, investment) {
-
-        return sum +
-          Number(
-            investment.value || 0
-          );
-
-      },
-      0
-    );
-
-
-  const investmentGain =
-    investmentValue -
-    invested;
-
-
-  const financialSnapshot = {
-
-    income: income,
-
-    expenses: expenses,
-
-    balance: balance,
-
-    savingsRate:
-      Number(
-        savingsRate.toFixed(1)
-      ),
-
-    investments: invested,
-
-    investmentValue:
-      investmentValue,
-
-    investmentGain:
-      investmentGain,
-
-    savingsGoals:
-      goals,
-
-    transactions:
-      transactions,
-
-    investmentRecords:
-      investments
-
-  };
-
-
-  // ====================================================
-  // CHECK AI URL
-  // ====================================================
 
   if (!AI_URL) {
 
     thinking.textContent =
-      "AI service is not configured.";
+      "MoneyMind AI is not configured.";
 
     return;
   }
 
 
-  // ====================================================
-  // CALL SUPABASE EDGE FUNCTION
-  // ====================================================
+  // ----------------------------------------------------
+  // REQUEST TIMEOUT
+  // ----------------------------------------------------
 
-  let controller =
+  const controller =
     new AbortController();
 
 
-  let timeout =
-    setTimeout(function() {
+  const timeout =
+    setTimeout(
+      function() {
 
-      controller.abort();
+        controller.abort();
 
-    }, 15000);
+      },
+      20000
+    );
 
 
   try {
+
+    // --------------------------------------------------
+    // SEND USER QUESTION + PERSONAL FINANCIAL DATA
+    // --------------------------------------------------
 
     const response =
       await fetch(
@@ -1743,8 +2107,13 @@ async function askAI() {
           method: "POST",
 
           headers: {
+
             "Content-Type":
+              "application/json",
+
+            "Accept":
               "application/json"
+
           },
 
           body:
@@ -1754,18 +2123,28 @@ async function askAI() {
                 question,
 
               financialData:
-                financialSnapshot
+                financialData,
+
+              personalized:
+                true
 
             }),
 
           signal:
             controller.signal
+
         }
       );
 
 
-    clearTimeout(timeout);
+    clearTimeout(
+      timeout
+    );
 
+
+    // --------------------------------------------------
+    // READ RESPONSE
+    // --------------------------------------------------
 
     let data = {};
 
@@ -1775,40 +2154,50 @@ async function askAI() {
       data =
         await response.json();
 
-    } catch (jsonError) {
+    } catch (error) {
 
       console.warn(
-        "AI returned non-JSON response."
+        "AI returned invalid JSON."
       );
 
     }
 
 
     console.log(
-      "MoneyMind AI:",
+      "MoneyMind AI response:",
       data
     );
 
 
+    // --------------------------------------------------
+    // HANDLE SERVER ERROR
+    // --------------------------------------------------
+
     if (!response.ok) {
 
       throw new Error(
-        data.error ||
-        data.message ||
-        "AI request failed."
+        data?.error ||
+        data?.message ||
+        `AI request failed (${response.status}).`
       );
     }
 
 
+    // --------------------------------------------------
+    // DISPLAY PERSONALIZED ANSWER
+    // --------------------------------------------------
+
     thinking.textContent =
-      data.reply ||
-      data.message ||
-      "I received your question, but no answer was returned.";
+      extractAIReply(
+        data
+      );
 
 
   } catch (error) {
 
-    clearTimeout(timeout);
+    clearTimeout(
+      timeout
+    );
 
 
     console.error(
@@ -1823,12 +2212,13 @@ async function askAI() {
     ) {
 
       thinking.textContent =
-        "The AI is taking too long to respond. Please try again.";
+        "MoneyMind AI is taking too long to respond. Please try again.";
 
     } else {
 
       thinking.textContent =
-        "MoneyMind AI could not connect right now.";
+        "MoneyMind AI could not connect right now. Please try again.";
+
     }
 
   }
@@ -1864,7 +2254,7 @@ function quickQuestion(question) {
 
 
 // ======================================================
-// CHAT MESSAGE
+// ADD CHAT MESSAGE
 // ======================================================
 
 function addChatMessage(
@@ -1886,10 +2276,11 @@ function addChatMessage(
     document.createElement("div");
 
   div.className =
-    "message " + type;
+    `message ${type}`;
+
 
   div.textContent =
-    message;
+    String(message);
 
 
   container.appendChild(
@@ -1948,7 +2339,7 @@ window.addEventListener(
 
 
 // ======================================================
-// INITIALIZE APP
+// INITIALIZE APPLICATION
 // ======================================================
 
 async function initializeApp() {
@@ -1958,7 +2349,7 @@ async function initializeApp() {
   );
 
 
-  // Make sure old/broken data cannot crash the app
+  // Guarantee valid data
 
   if (!Array.isArray(transactions)) {
     transactions = [];
@@ -1973,8 +2364,12 @@ async function initializeApp() {
   }
 
 
+  // Authentication
+
   await checkAuth();
 
+
+  // Dashboard
 
   updateDashboard();
 
@@ -1992,7 +2387,7 @@ async function initializeApp() {
 
 
 // ======================================================
-// AUTH STATE LISTENER
+// SUPABASE AUTH STATE
 // ======================================================
 
 if (supabaseClient) {
@@ -2035,10 +2430,6 @@ if (supabaseClient) {
 
 // ======================================================
 // EXPOSE FUNCTIONS TO HTML
-//
-// IMPORTANT:
-// All onclick="..." functions are
-// attached to window here.
 // ======================================================
 
 window.showSignup =
@@ -2052,6 +2443,9 @@ window.signupUser =
 
 window.loginUser =
   loginUser;
+
+window.logoutUser =
+  logoutUser;
 
 window.showSection =
   showSection;
@@ -2097,12 +2491,11 @@ window.closeModal =
 
 
 // ======================================================
-// START WHEN PAGE LOADS
+// START APPLICATION
 // ======================================================
 
 if (
-  document.readyState ===
-  "loading"
+  document.readyState === "loading"
 ) {
 
   document.addEventListener(
@@ -2116,6 +2509,10 @@ if (
 
 }
 
+
+// ======================================================
+// FINAL DEBUG MESSAGE
+// ======================================================
 
 console.log(
   "MoneyMind app.js loaded successfully."
