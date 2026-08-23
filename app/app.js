@@ -141,7 +141,9 @@ function escapeHTML(value) {
 
 async function checkAuth() {
 
-  if (!supabaseClient) {
+  console.log("Checking authentication...");
+
+  if (!window.supabaseClient) {
 
     console.error(
       "Supabase client not found."
@@ -150,6 +152,8 @@ async function checkAuth() {
     showAuthMessage(
       "Authentication service unavailable."
     );
+
+    showAuthentication();
 
     return;
   }
@@ -160,13 +164,26 @@ async function checkAuth() {
       data,
       error
     } =
-      await supabaseClient.auth.getSession();
+      await window.supabaseClient.auth.getSession();
 
     if (error) {
       throw error;
     }
 
-    if (data.session) {
+    console.log(
+      "Current session:",
+      data.session
+    );
+
+    if (
+      data.session &&
+      data.session.user
+    ) {
+
+      console.log(
+        "Logged in:",
+        data.session.user.email
+      );
 
       showApplication(
         data.session.user
@@ -174,8 +191,11 @@ async function checkAuth() {
 
     } else {
 
-      showAuthentication();
+      console.log(
+        "No active session."
+      );
 
+      showAuthentication();
     }
 
   } catch (error) {
@@ -188,8 +208,6 @@ async function checkAuth() {
     showAuthentication();
   }
 }
-
-
 // ======================================================
 // SHOW APP
 // ======================================================
