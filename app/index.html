@@ -896,15 +896,14 @@
 
 <script src="app.js"></script>
   <script>
-window.toggleMenu = function () {
-  const menu = document.getElementById("mobileMenu");
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  if (!menu) return;
-
-  if (menu.style.display === "flex") {
-    menu.style.display = "none";
-  } else {
-    menu.style.display = "flex";
-  }
-};
+<script>
+  window.supabaseClient =
+    window.supabase.createClient(
+      "https://pgbetpprhyrplrzxjzvb.supabase.co",
+      "sb_publishable_zLKUr9LyfrZCMNv8obdY3A_Z46AgwB8"
+    );
 </script>
+
+<script src="app.js"></script>
