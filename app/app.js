@@ -11,8 +11,7 @@ async function checkAuth() {
     data: {
       session
     }
-  } = await supabaseClient.auth.getSession();
-
+ } = await window.supabaseClient.auth.getSession();ff
   const authScreen =
     document.getElementById("authScreen");
 
@@ -73,7 +72,7 @@ async function signupUser() {
     data,
     error
   } =
-    await supabaseClient.auth.signUp({
+    await window.supabaseClient.auth.signUp({
       email: email,
       password: password
     });
@@ -134,7 +133,7 @@ async function loginUser() {
     data,
     error
   } =
-    await supabaseClient.auth.signInWithPassword({
+    await window.supabaseClient.auth.getSession()
       email: email,
       password: password
     });
