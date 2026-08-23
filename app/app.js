@@ -373,30 +373,36 @@ window.loginUser = loginUser;
 // ==========================================
 // AUTH BUTTON FUNCTIONS
 // ==========================================
+// ==========================================
+// EXPOSE FUNCTIONS TO HTML
+// ==========================================
 
 window.showSignup = function () {
-
   document.getElementById("loginForm").style.display = "none";
-
   document.getElementById("signupForm").style.display = "block";
-
   document.getElementById("authMessage").textContent = "";
 };
-
 
 window.showLogin = function () {
-
   document.getElementById("signupForm").style.display = "none";
-
   document.getElementById("loginForm").style.display = "block";
-
   document.getElementById("authMessage").textContent = "";
 };
-
 
 window.signupUser = signupUser;
 window.loginUser = loginUser;
-window.toggleMenu = toggleMenu;
+
+window.toggleMenu = function () {
+  const menu = document.getElementById("mobileMenu");
+
+  if (!menu) return;
+
+  menu.style.display =
+    menu.style.display === "flex"
+      ? "none"
+      : "flex";
+};
+
 window.showSection = showSection;
 
 window.openTransactionModal = openTransactionModal;
@@ -415,19 +421,3 @@ window.askAI = askAI;
 window.quickQuestion = quickQuestion;
 
 window.closeModal = closeModal;
-
-window.showSignup = showSignup;
-window.showLogin = showLogin;
-window.signupUser = signupUser;
-window.loginUser = loginUser;
-window.toggleMenu = function () {
-  const menu = document.getElementById("mobileMenu");
-
-  if (!menu) return;
-
-  if (menu.style.display === "flex") {
-    menu.style.display = "none";
-  } else {
-    menu.style.display = "flex";
-  }
-};
