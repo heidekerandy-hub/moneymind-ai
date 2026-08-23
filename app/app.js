@@ -1213,3 +1213,14 @@ window.showLogin = showLogin;
 window.signupUser = signupUser;
 window.loginUser = loginUser;
 
+window.showSignup = function () {
+  document.getElementById("loginForm").style.display = "none";
+  document.getElementById("signupForm").style.display = "block";
+  document.getElementById("authMessage").textContent = "";
+};
+
+window.showLogin = function () {
+  document.getElementById("signupForm").style.display = "none";
+  document.getElementById("loginForm").style.display = "block";
+  document.getElementById("authMessage").textContent = "";
+};
