@@ -1,7 +1,9 @@
 // ==========================================
 // MONEY MIND AUTHENTICATION
 // ==========================================
-
+let transactions = [];
+let goals = [];
+let investments = [];
 async function askAI() {
 
   const input =
