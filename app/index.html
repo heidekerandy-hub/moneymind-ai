@@ -877,31 +877,28 @@
        SUPABASE
        ========================================== -->
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SUPABASE -->
 
-  <script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    const SUPABASE_URL =
-      "https://pgbetpprhyrplrzxjzvb.supabase.co";
+<script>
 
-    const SUPABASE_ANON_KEY =
-      sb_publishable_fh5mPSqL7vCdV1ssXRS8Dw_23qeafJl
+  const SUPABASE_URL =
+    "https://pgbetpprhyrplrzxjzvb.supabase.co";
 
-    const supabaseClient =
-      supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-      );
+  const SUPABASE_ANON_KEY =
+    "sb_publishable_fh5mPSqL7vCdV1ssXRS8Dw_23qeafJl
 
-  </script>
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+</script>
 
 
-  <!-- MAIN JAVASCRIPT -->
+<!-- MAIN JAVASCRIPT -->
 
-  <script src="app.js"></script>
-
-</body>
-
-</html>
-</html>
+<script src="app.js"></script>
 ```
