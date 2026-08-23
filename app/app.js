@@ -1,6 +1,191 @@
 // ==========================================
 // MONEY MIND AI - COMPLETE APP.JS
 // ==========================================
+// ==========================================
+// MONEY MIND AUTHENTICATION
+// ==========================================
+
+async function checkAuth() {
+
+  const {
+    data: {
+      session
+    }
+  } = await supabaseClient.auth.getSession();
+
+  const authScreen =
+    document.getElementById("authScreen");
+
+  if (!authScreen) return;
+
+  if (session) {
+
+    authScreen.style.display = "none";
+
+    console.log(
+      "MoneyMind user:",
+      session.user.email
+    );
+
+  } else {
+
+    authScreen.style.display = "flex";
+  }
+}
+
+
+async function signupUser() {
+
+  const email =
+    document
+      .getElementById("signupEmail")
+      .value
+      .trim();
+
+  const password =
+    document
+      .getElementById("signupPassword")
+      .value;
+
+  const message =
+    document.getElementById("authMessage");
+
+  if (!email || !password) {
+
+    message.textContent =
+      "Please enter your email and password.";
+
+    return;
+  }
+
+  if (password.length < 6) {
+
+    message.textContent =
+      "Password must be at least 6 characters.";
+
+    return;
+  }
+
+  message.textContent =
+    "Creating your account...";
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient.auth.signUp({
+      email: email,
+      password: password
+    });
+
+  if (error) {
+
+    console.error(error);
+
+    message.textContent =
+      error.message;
+
+    return;
+  }
+
+  if (data.session) {
+
+    message.textContent =
+      "Account created successfully.";
+
+    await checkAuth();
+
+  } else {
+
+    message.textContent =
+      "Account created. Please check your email to confirm your account.";
+  }
+}
+
+
+async function loginUser() {
+
+  const email =
+    document
+      .getElementById("loginEmail")
+      .value
+      .trim();
+
+  const password =
+    document
+      .getElementById("loginPassword")
+      .value;
+
+  const message =
+    document.getElementById("authMessage");
+
+  if (!email || !password) {
+
+    message.textContent =
+      "Please enter your email and password.";
+
+    return;
+  }
+
+  message.textContent =
+    "Logging in...";
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+  if (error) {
+
+    console.error(error);
+
+    message.textContent =
+      error.message;
+
+    return;
+  }
+
+  message.textContent =
+    "Login successful.";
+
+  await checkAuth();
+}
+
+
+function showSignup() {
+
+  document.getElementById(
+    "loginForm"
+  ).style.display = "none";
+
+  document.getElementById(
+    "signupForm"
+  ).style.display = "block";
+
+  document.getElementById(
+    "authMessage"
+  ).textContent = "";
+}
+
+
+function showLogin() {
+
+  document.getElementById(
+    "signupForm"
+  ).style.display = "none";
+
+  document.getElementById(
+    "loginForm"
+  ).style.display = "block";
+
+  document.getElementById(
+    "authMessage"
+  ).textContent = "";
+}
 
 const AI_URL =
   "https://pgbetpprhyrplrzxjzvb.supabase.co/functions/v1/smart-responder";
@@ -955,4 +1140,74 @@ window.quickQuestion =
   quickQuestion;
 
 window.closeModal =
-  closeModal;
+  closeModal;// ==========================================
+// MONEY MIND AUTHENTICATION
+// ==========================================
+
+async function signupUser() {
+
+  const email = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPassword").value;
+  const message = document.getElementById("authMessage");
+
+  if (!email || !password) {
+    message.textContent = "Please enter your email and password.";
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signUp({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    message.textContent = error.message;
+    return;
+  }
+
+  message.textContent =
+    "Account created. Please check your email to confirm your account.";
+}
+
+
+async function loginUser() {
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const message = document.getElementById("authMessage");
+
+  if (!email || !password) {
+    message.textContent = "Please enter your email and password.";
+    return;
+  }
+
+  const { error } =
+    await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+  if (error) {
+    message.textContent = error.message;
+    return;
+  }
+
+  document.getElementById("authScreen").style.display = "none";
+}
+
+
+function showSignup() {
+
+  document.getElementById("loginForm").style.display = "none";
+  document.getElementById("signupForm").style.display = "block";
+  document.getElementById("authMessage").textContent = "";
+}
+
+
+function showLogin() {
+
+  document.getElementById("signupForm").style.display = "none";
+  document.getElementById("loginForm").style.display = "block";
+  document.getElementById("authMessage").textContent = "";
+}
+
