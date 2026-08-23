@@ -1696,20 +1696,993 @@
   <!-- =====================================================
        SUPABASE
        ===================================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta
+    name="description"
+    content="MoneyMind AI - Personalized Financial Assistant"
+  >
 
-  <script>
-    window.supabaseClient =
-      window.supabase.createClient(
-        "https://pgbetpprhyrplrzxjzvb.supabase.co",
-        "sb_publishable_zLKUr9LyfrZCMNv8obdY3A_Z46AgwB8"
-      );
-  </script>
+  <meta name="theme-color" content="#0f172a">
 
-  <!-- ONLY ONE APP.JS -->
+  <title>MoneyMind AI</title>
 
-  <script src="app.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<!-- =====================================================
+     AUTH SCREEN
+===================================================== -->
+
+<div id="authScreen" class="auth-screen">
+
+  <div class="auth-card">
+
+    <div class="logo large-logo">M</div>
+
+    <h1>MoneyMind AI</h1>
+
+    <p class="auth-subtitle">
+      Your smarter money companion
+    </p>
+
+    <!-- LOGIN -->
+
+    <div id="loginForm">
+
+      <h2>Login</h2>
+
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="Email address"
+        autocomplete="email"
+      >
+
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+      >
+
+      <button
+        id="loginButton"
+        class="primary full"
+        type="button"
+      >
+        Login
+      </button>
+
+      <p class="auth-switch">
+        Don't have an account?
+        <button id="showSignupButton" type="button">
+          Create one
+        </button>
+      </p>
+
+    </div>
+
+
+    <!-- SIGNUP -->
+
+    <div id="signupForm" class="hidden">
+
+      <h2>Create Account</h2>
+
+      <input
+        id="signupEmail"
+        type="email"
+        placeholder="Email address"
+        autocomplete="email"
+      >
+
+      <input
+        id="signupPassword"
+        type="password"
+        placeholder="Create password"
+        autocomplete="new-password"
+      >
+
+      <button
+        id="signupButton"
+        class="primary full"
+        type="button"
+      >
+        Create Account
+      </button>
+
+      <p class="auth-switch">
+        Already have an account?
+        <button id="showLoginButton" type="button">
+          Login
+        </button>
+      </p>
+
+    </div>
+
+    <p id="authMessage" class="auth-message"></p>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     APPLICATION
+===================================================== -->
+
+<div id="app" class="app hidden">
+
+  <!-- TOP BAR -->
+
+  <header class="topbar">
+
+    <div class="brand">
+
+      <div class="logo">
+        M
+      </div>
+
+      <div class="brand-text">
+
+        <h1>MoneyMind AI</h1>
+
+        <p>Your smarter money companion</p>
+
+      </div>
+
+    </div>
+
+    <div class="topbar-right">
+
+      <span id="userEmail" class="user-email"></span>
+
+      <button
+        id="menuButton"
+        class="menu-btn"
+        type="button"
+        aria-label="Open menu"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- NAVIGATION -->
+
+  <nav
+    id="mobileMenu"
+    class="mobile-menu"
+  >
+
+    <button
+      class="nav-item active"
+      data-section="dashboard"
+      type="button"
+    >
+      <span>🏠</span>
+      Dashboard
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="transactions"
+      type="button"
+    >
+      <span>💳</span>
+      Transactions
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="goals"
+      type="button"
+    >
+      <span>🎯</span>
+      Savings Goals
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="investments"
+      type="button"
+    >
+      <span>📈</span>
+      Investments
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="assistant"
+      type="button"
+    >
+      <span>🤖</span>
+      AI Assistant
+    </button>
+
+    <div class="menu-divider"></div>
+
+    <button
+      id="logoutButton"
+      class="nav-item logout"
+      type="button"
+    >
+      <span>🚪</span>
+      Logout
+    </button>
+
+  </nav>
+
+
+  <!-- MAIN -->
+
+  <main class="main-content">
+
+
+    <!-- =================================================
+         DASHBOARD
+    ================================================= -->
+
+    <section
+      id="dashboard"
+      class="section active"
+    >
+
+      <div class="welcome">
+
+        <div>
+
+          <p class="eyebrow">
+            PERSONAL FINANCE
+          </p>
+
+          <h2>
+            Good day 👋
+          </h2>
+
+          <p>
+            Take control of your money,
+            one decision at a time.
+          </p>
+
+        </div>
+
+        <button
+          id="dashboardAddTransaction"
+          class="primary"
+          type="button"
+        >
+          + Add Transaction
+        </button>
+
+      </div>
+
+
+      <!-- SUMMARY CARDS -->
+
+      <div class="cards">
+
+        <div class="card">
+
+          <span>Total Income</span>
+
+          <strong id="totalIncome">
+            ₦0
+          </strong>
+
+        </div>
+
+        <div class="card">
+
+          <span>Total Expenses</span>
+
+          <strong id="totalExpenses">
+            ₦0
+          </strong>
+
+        </div>
+
+        <div class="card">
+
+          <span>Balance</span>
+
+          <strong id="balance">
+            ₦0
+          </strong>
+
+        </div>
+
+        <div class="card">
+
+          <span>Savings Rate</span>
+
+          <strong id="dashboardSavingsRate">
+            0%
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <!-- FINANCIAL HEALTH -->
+
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <div>
+            <h3>Financial Health</h3>
+            <p>Your current financial position</p>
+          </div>
+
+          <div
+            id="healthScore"
+            class="health-score"
+          >
+            0%
+          </div>
+
+        </div>
+
+        <div class="health-content">
+
+          <div>
+
+            <h4 id="healthTitle">
+              Let's get started
+            </h4>
+
+            <p id="healthMessage">
+              Add your income and expenses
+              to see your financial health.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PERSONALIZED INSIGHT -->
+
+      <div class="panel insight-panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h3>MoneyMind Insight</h3>
+
+            <p>
+              Personalized from your financial activity
+            </p>
+
+          </div>
+
+          <span class="ai-badge">
+            AI
+          </span>
+
+        </div>
+
+        <div id="personalInsight">
+
+          Add some transactions and MoneyMind
+          will generate a personalized financial insight.
+
+        </div>
+
+      </div>
+
+
+      <!-- RECENT TRANSACTIONS -->
+
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h3>Recent Transactions</h3>
+
+            <p>Your latest financial activity</p>
+
+          </div>
+
+          <button
+            id="viewTransactionsButton"
+            class="text-button"
+            type="button"
+          >
+            View all
+          </button>
+
+        </div>
+
+        <div
+          id="recentTransactions"
+          class="transaction-list"
+        >
+
+          <p class="empty">
+            No transactions yet.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         TRANSACTIONS
+    ================================================= -->
+
+    <section
+      id="transactions"
+      class="section"
+    >
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            MONEY TRACKING
+          </p>
+
+          <h2>Transactions</h2>
+
+          <p>
+            Track where your money comes
+            from and where it goes.
+          </p>
+
+        </div>
+
+        <button
+          id="transactionsAddButton"
+          class="primary"
+          type="button"
+        >
+          + Add
+        </button>
+
+      </div>
+
+      <div
+        id="allTransactions"
+        class="transaction-list"
+      >
+
+        <p class="empty">
+          No transactions yet.
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         GOALS
+    ================================================= -->
+
+    <section
+      id="goals"
+      class="section"
+    >
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            FINANCIAL GOALS
+          </p>
+
+          <h2>Savings Goals</h2>
+
+          <p>
+            Turn your plans into measurable progress.
+          </p>
+
+        </div>
+
+        <button
+          id="goalAddButton"
+          class="primary"
+          type="button"
+        >
+          + Goal
+        </button>
+
+      </div>
+
+      <div
+        id="goalsList"
+        class="goal-grid"
+      >
+
+        <p class="empty">
+          No savings goals yet.
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         INVESTMENTS
+    ================================================= -->
+
+    <section
+      id="investments"
+      class="section"
+    >
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            WEALTH BUILDING
+          </p>
+
+          <h2>Investments</h2>
+
+          <p>
+            Keep track of your investment portfolio.
+          </p>
+
+        </div>
+
+        <button
+          id="investmentAddButton"
+          class="primary"
+          type="button"
+        >
+          + Investment
+        </button>
+
+      </div>
+
+      <div
+        id="investmentSummary"
+        class="cards"
+      >
+
+        <div class="card">
+
+          <span>Total Invested</span>
+
+          <strong id="totalInvested">
+            ₦0
+          </strong>
+
+        </div>
+
+        <div class="card">
+
+          <span>Current Value</span>
+
+          <strong id="investmentValue">
+            ₦0
+          </strong>
+
+        </div>
+
+        <div class="card">
+
+          <span>Gain / Loss</span>
+
+          <strong id="investmentGain">
+            ₦0
+          </strong>
+
+        </div>
+
+      </div>
+
+      <div
+        id="investmentsList"
+        class="investment-grid"
+      >
+
+        <p class="empty">
+          No investments recorded yet.
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         AI ASSISTANT
+    ================================================= -->
+
+    <section
+      id="assistant"
+      class="section"
+    >
+
+      <div class="assistant-header">
+
+        <div class="ai-icon">
+          🤖
+        </div>
+
+        <div>
+
+          <p class="eyebrow">
+            PERSONALIZED FINANCIAL AI
+          </p>
+
+          <h2>MoneyMind AI</h2>
+
+          <p>
+            Ask questions based on your actual
+            financial position.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- PERSONAL SNAPSHOT -->
+
+      <div class="ai-snapshot">
+
+        <div>
+          <span>Income</span>
+          <strong id="aiIncome">₦0</strong>
+        </div>
+
+        <div>
+          <span>Expenses</span>
+          <strong id="aiExpenses">₦0</strong>
+        </div>
+
+        <div>
+          <span>Balance</span>
+          <strong id="aiBalance">₦0</strong>
+        </div>
+
+        <div>
+          <span>Savings</span>
+          <strong id="aiSavingsRate">0%</strong>
+        </div>
+
+      </div>
+
+
+      <!-- CHAT -->
+
+      <div
+        id="chatMessages"
+        class="chat-box"
+      >
+
+        <div class="message ai">
+
+          Hi! I'm MoneyMind AI. 👋
+
+          <br><br>
+
+          I can analyze your income,
+          expenses, savings goals and
+          investments to give you
+          personalized financial guidance.
+
+        </div>
+
+      </div>
+
+
+      <!-- INPUT -->
+
+      <div class="chat-input">
+
+        <input
+          id="aiInput"
+          type="text"
+          placeholder="Ask MoneyMind AI..."
+          autocomplete="off"
+        >
+
+        <button
+          id="sendAIButton"
+          class="primary"
+          type="button"
+        >
+          Send
+        </button>
+
+      </div>
+
+
+      <!-- SUGGESTIONS -->
+
+      <div class="suggestions">
+
+        <button
+          data-question="Analyze my financial situation"
+          type="button"
+        >
+          Analyze my finances
+        </button>
+
+        <button
+          data-question="How can I reduce my expenses?"
+          type="button"
+        >
+          Reduce expenses
+        </button>
+
+        <button
+          data-question="How much should I save each month?"
+          type="button"
+        >
+          Savings advice
+        </button>
+
+        <button
+          data-question="How should I improve my investments?"
+          type="button"
+        >
+          Investment advice
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- =====================================================
+     TRANSACTION MODAL
+===================================================== -->
+
+<div
+  id="transactionModal"
+  class="modal"
+>
+
+  <div class="modal-content">
+
+    <button
+      class="close"
+      data-close="transactionModal"
+      type="button"
+    >
+      ×
+    </button>
+
+    <h2>Add Transaction</h2>
+
+    <label>Type</label>
+
+    <select id="transactionType">
+
+      <option value="income">
+        Income
+      </option>
+
+      <option value="expense">
+        Expense
+      </option>
+
+    </select>
+
+
+    <label>Description</label>
+
+    <input
+      id="transactionDescription"
+      type="text"
+      placeholder="e.g. Salary"
+    >
+
+
+    <label>Amount (₦)</label>
+
+    <input
+      id="transactionAmount"
+      type="number"
+      min="1"
+      placeholder="50000"
+    >
+
+
+    <label>Category</label>
+
+    <select id="transactionCategory">
+
+      <option>Salary</option>
+      <option>Business</option>
+      <option>Food</option>
+      <option>Transport</option>
+      <option>Housing</option>
+      <option>Bills</option>
+      <option>Education</option>
+      <option>Shopping</option>
+      <option>Health</option>
+      <option>Investment</option>
+      <option>Other</option>
+
+    </select>
+
+
+    <button
+      id="saveTransactionButton"
+      class="primary full"
+      type="button"
+    >
+      Save Transaction
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     GOAL MODAL
+===================================================== -->
+
+<div
+  id="goalModal"
+  class="modal"
+>
+
+  <div class="modal-content">
+
+    <button
+      class="close"
+      data-close="goalModal"
+      type="button"
+    >
+      ×
+    </button>
+
+    <h2>New Savings Goal</h2>
+
+    <label>Goal Name</label>
+
+    <input
+      id="goalName"
+      type="text"
+      placeholder="Emergency Fund"
+    >
+
+    <label>Target Amount (₦)</label>
+
+    <input
+      id="goalTarget"
+      type="number"
+      min="1"
+      placeholder="500000"
+    >
+
+    <label>Already Saved (₦)</label>
+
+    <input
+      id="goalSaved"
+      type="number"
+      min="0"
+      placeholder="0"
+    >
+
+    <button
+      id="saveGoalButton"
+      class="primary full"
+      type="button"
+    >
+      Save Goal
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     INVESTMENT MODAL
+===================================================== -->
+
+<div
+  id="investmentModal"
+  class="modal"
+>
+
+  <div class="modal-content">
+
+    <button
+      class="close"
+      data-close="investmentModal"
+      type="button"
+    >
+      ×
+    </button>
+
+    <h2>Add Investment</h2>
+
+    <label>Investment Name</label>
+
+    <input
+      id="investmentName"
+      type="text"
+      placeholder="Nigerian Stocks"
+    >
+
+    <label>Amount Invested (₦)</label>
+
+    <input
+      id="investmentAmount"
+      type="number"
+      min="1"
+      placeholder="100000"
+    >
+
+    <label>Current Value (₦)</label>
+
+    <input
+      id="investmentCurrentValue"
+      type="number"
+      min="0"
+      placeholder="105000"
+    >
+
+    <button
+      id="saveInvestmentButton"
+      class="primary full"
+      type="button"
+    >
+      Save Investment
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     SUPABASE
+===================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+  window.supabaseClient =
+    window.supabase.createClient(
+      "https://pgbetpprhyrplrzxjzvb.supabase.co",
+      "sb_publishable_zLKUr9LyfrZCMNv8obdY3A_Z46AgwB8"
+    );
+
+</script>
+
+<script src="app.js"></script>
 
 </body>
 </html>
