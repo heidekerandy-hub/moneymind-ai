@@ -1,187 +1,609 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
   <meta name="description" content="MoneyMind AI - Personal Finance Assistant">
   <title>MoneyMind AI</title>
+
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">M</div>
-      <div>
-        <h1>MoneyMind AI</h1>
-        <p>Your smarter money companion</p>
+  <!-- ==========================================
+       AUTHENTICATION SCREEN
+       ========================================== -->
+
+  <div id="authScreen" class="auth-screen">
+
+    <div class="auth-card">
+
+      <div class="logo auth-logo">M</div>
+
+      <h1>Welcome to MoneyMind AI</h1>
+
+      <p class="auth-subtitle">
+        Your smarter money companion
+      </p>
+
+
+      <!-- LOGIN FORM -->
+
+      <div id="loginForm">
+
+        <h2>Login</h2>
+
+        <input
+          id="loginEmail"
+          type="email"
+          placeholder="Email address"
+          autocomplete="email"
+        >
+
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+        >
+
+        <button
+          class="primary full"
+          onclick="loginUser()"
+        >
+          Login
+        </button>
+
+        <p class="auth-switch">
+          Don't have an account?
+
+          <button
+            type="button"
+            onclick="showSignup()"
+          >
+            Create one
+          </button>
+
+        </p>
+
       </div>
+
+
+      <!-- SIGN UP FORM -->
+
+      <div
+        id="signupForm"
+        style="display:none;"
+      >
+
+        <h2>Create Account</h2>
+
+        <input
+          id="signupEmail"
+          type="email"
+          placeholder="Email address"
+          autocomplete="email"
+        >
+
+        <input
+          id="signupPassword"
+          type="password"
+          placeholder="Create password"
+          autocomplete="new-password"
+        >
+
+        <button
+          class="primary full"
+          onclick="signupUser()"
+        >
+          Create Account
+        </button>
+
+        <p class="auth-switch">
+
+          Already have an account?
+
+          <button
+            type="button"
+            onclick="showLogin()"
+          >
+            Login
+          </button>
+
+        </p>
+
+      </div>
+
+
+      <!-- AUTH MESSAGE -->
+
+      <p id="authMessage"></p>
+
     </div>
 
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+  </div>
+
+
+
+  <!-- ==========================================
+       MONEY MIND APPLICATION
+       ========================================== -->
+
+  <header class="topbar">
+
+    <div class="brand">
+
+      <div class="logo">
+        M
+      </div>
+
+      <div>
+
+        <h1>
+          MoneyMind AI
+        </h1>
+
+        <p>
+          Your smarter money companion
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="menu-btn"
+      onclick="toggleMenu()"
+    >
+      ☰
+    </button>
+
   </header>
 
-  <nav id="mobileMenu" class="mobile-menu">
-    <button onclick="showSection('dashboard')">Dashboard</button>
-    <button onclick="showSection('transactions')">Transactions</button>
-    <button onclick="showSection('goals')">Savings Goals</button>
-    <button onclick="showSection('investments')">Investments</button>
-    <button onclick="showSection('assistant')">AI Assistant</button>
+
+
+  <!-- ==========================================
+       NAVIGATION
+       ========================================== -->
+
+  <nav
+    id="mobileMenu"
+    class="mobile-menu"
+  >
+
+    <button
+      onclick="showSection('dashboard')"
+    >
+      Dashboard
+    </button>
+
+    <button
+      onclick="showSection('transactions')"
+    >
+      Transactions
+    </button>
+
+    <button
+      onclick="showSection('goals')"
+    >
+      Savings Goals
+    </button>
+
+    <button
+      onclick="showSection('investments')"
+    >
+      Investments
+    </button>
+
+    <button
+      onclick="showSection('assistant')"
+    >
+      AI Assistant
+    </button>
+
   </nav>
+
+
+
+  <!-- ==========================================
+       MAIN APPLICATION
+       ========================================== -->
 
   <main>
 
-    <!-- DASHBOARD -->
-    <section id="dashboard" class="section active">
+
+    <!-- ==========================================
+         DASHBOARD
+         ========================================== -->
+
+    <section
+      id="dashboard"
+      class="section active"
+    >
 
       <div class="welcome">
+
         <div>
-          <h2>Good day 👋</h2>
-          <p>Take control of your money, one decision at a time.</p>
+
+          <h2>
+            Good day 👋
+          </h2>
+
+          <p>
+            Take control of your money,
+            one decision at a time.
+          </p>
+
         </div>
-        <button class="primary" onclick="openTransactionModal()">+ Add Transaction</button>
+
+        <button
+          class="primary"
+          onclick="openTransactionModal()"
+        >
+          + Add Transaction
+        </button>
+
       </div>
+
 
       <div class="cards">
 
-        <div class="card">
-          <span>Total Income</span>
-          <strong id="totalIncome">₦0</strong>
-        </div>
 
         <div class="card">
-          <span>Total Expenses</span>
-          <strong id="totalExpenses">₦0</strong>
+
+          <span>
+            Total Income
+          </span>
+
+          <strong id="totalIncome">
+            ₦0
+          </strong>
+
         </div>
 
+
         <div class="card">
-          <span>Balance</span>
-          <strong id="balance">₦0</strong>
+
+          <span>
+            Total Expenses
+          </span>
+
+          <strong id="totalExpenses">
+            ₦0
+          </strong>
+
+        </div>
+
+
+        <div class="card">
+
+          <span>
+            Balance
+          </span>
+
+          <strong id="balance">
+            ₦0
+          </strong>
+
         </div>
 
       </div>
 
+
+
+      <!-- RECENT TRANSACTIONS -->
+
       <div class="panel">
+
         <div class="panel-header">
-          <h3>Recent Transactions</h3>
-          <button onclick="showSection('transactions')">View all</button>
+
+          <h3>
+            Recent Transactions
+          </h3>
+
+          <button
+            onclick="showSection('transactions')"
+          >
+            View all
+          </button>
+
         </div>
 
-        <div id="recentTransactions" class="transaction-list">
-          <p class="empty">No transactions yet.</p>
+        <div
+          id="recentTransactions"
+          class="transaction-list"
+        >
+
+          <p class="empty">
+            No transactions yet.
+          </p>
+
         </div>
+
       </div>
 
+
+
+      <!-- FINANCIAL HEALTH -->
+
       <div class="panel">
+
         <div class="panel-header">
-          <h3>Financial Health</h3>
+
+          <h3>
+            Financial Health
+          </h3>
+
         </div>
 
         <div class="health">
-          <div class="health-score" id="healthScore">0%</div>
-          <div>
-            <h4 id="healthTitle">Let's get started</h4>
-            <p id="healthMessage">
-              Add your income and expenses to see your financial health.
-            </p>
+
+          <div
+            class="health-score"
+            id="healthScore"
+          >
+            0%
           </div>
+
+          <div>
+
+            <h4 id="healthTitle">
+              Let's get started
+            </h4>
+
+            <p id="healthMessage">
+              Add your income and expenses
+              to see your financial health.
+            </p>
+
+          </div>
+
         </div>
+
       </div>
 
     </section>
 
 
-    <!-- TRANSACTIONS -->
-    <section id="transactions" class="section">
+
+    <!-- ==========================================
+         TRANSACTIONS
+         ========================================== -->
+
+    <section
+      id="transactions"
+      class="section"
+    >
 
       <div class="section-heading">
+
         <div>
-          <h2>Transactions</h2>
-          <p>Track where your money comes from and where it goes.</p>
+
+          <h2>
+            Transactions
+          </h2>
+
+          <p>
+            Track where your money comes
+            from and where it goes.
+          </p>
+
         </div>
 
-        <button class="primary" onclick="openTransactionModal()">+ Add</button>
+        <button
+          class="primary"
+          onclick="openTransactionModal()"
+        >
+          + Add
+        </button>
+
       </div>
 
-      <div id="allTransactions" class="transaction-list">
-        <p class="empty">No transactions yet.</p>
+
+      <div
+        id="allTransactions"
+        class="transaction-list"
+      >
+
+        <p class="empty">
+          No transactions yet.
+        </p>
+
       </div>
 
     </section>
 
 
-    <!-- SAVINGS GOALS -->
-    <section id="goals" class="section">
+
+    <!-- ==========================================
+         SAVINGS GOALS
+         ========================================== -->
+
+    <section
+      id="goals"
+      class="section"
+    >
 
       <div class="section-heading">
+
         <div>
-          <h2>Savings Goals</h2>
-          <p>Turn your plans into measurable progress.</p>
+
+          <h2>
+            Savings Goals
+          </h2>
+
+          <p>
+            Turn your plans into
+            measurable progress.
+          </p>
+
         </div>
 
-        <button class="primary" onclick="openGoalModal()">+ Goal</button>
+        <button
+          class="primary"
+          onclick="openGoalModal()"
+        >
+          + Goal
+        </button>
+
       </div>
 
-      <div id="goalsList" class="goal-grid">
-        <p class="empty">No savings goals yet.</p>
+
+      <div
+        id="goalsList"
+        class="goal-grid"
+      >
+
+        <p class="empty">
+          No savings goals yet.
+        </p>
+
       </div>
 
     </section>
 
 
-    <!-- INVESTMENTS -->
-    <section id="investments" class="section">
+
+    <!-- ==========================================
+         INVESTMENTS
+         ========================================== -->
+
+    <section
+      id="investments"
+      class="section"
+    >
 
       <div class="section-heading">
+
         <div>
-          <h2>Investments</h2>
-          <p>Keep a simple record of your investments.</p>
+
+          <h2>
+            Investments
+          </h2>
+
+          <p>
+            Keep a simple record of
+            your investments.
+          </p>
+
         </div>
 
-        <button class="primary" onclick="openInvestmentModal()">+ Investment</button>
+        <button
+          class="primary"
+          onclick="openInvestmentModal()"
+        >
+          + Investment
+        </button>
+
       </div>
 
-      <div id="investmentsList" class="investment-grid">
-        <p class="empty">No investments recorded yet.</p>
+
+      <div
+        id="investmentsList"
+        class="investment-grid"
+      >
+
+        <p class="empty">
+          No investments recorded yet.
+        </p>
+
       </div>
 
     </section>
 
 
-    <!-- AI ASSISTANT -->
-    <section id="assistant" class="section">
+
+    <!-- ==========================================
+         AI ASSISTANT
+         ========================================== -->
+
+    <section
+      id="assistant"
+      class="section"
+    >
 
       <div class="assistant-header">
-        <div class="ai-icon">🤖</div>
-        <div>
-          <h2>MoneyMind AI</h2>
-          <p>Your personal financial thinking partner.</p>
+
+        <div class="ai-icon">
+          🤖
         </div>
+
+        <div>
+
+          <h2>
+            MoneyMind AI
+          </h2>
+
+          <p>
+            Your personal financial
+            thinking partner.
+          </p>
+
+        </div>
+
       </div>
 
-      <div id="chatMessages" class="chat-box">
+
+      <div
+        id="chatMessages"
+        class="chat-box"
+      >
+
         <div class="message ai">
-          Hi! I'm MoneyMind AI. Ask me about budgeting, saving, expenses or your financial goals.
+
+          Hi! I'm MoneyMind AI.
+          Ask me about budgeting,
+          saving, expenses or your
+          financial goals.
+
         </div>
+
       </div>
+
 
       <div class="chat-input">
+
         <input
           id="aiInput"
           type="text"
           placeholder="Ask MoneyMind AI something..."
           onkeydown="if(event.key === 'Enter') askAI()"
         >
-        <button class="primary" onclick="askAI()">Send</button>
+
+        <button
+          class="primary"
+          onclick="askAI()"
+        >
+          Send
+        </button>
+
       </div>
 
+
       <div class="suggestions">
-        <button onclick="quickQuestion('How can I reduce my expenses?')">Reduce expenses</button>
-        <button onclick="quickQuestion('How much should I save each month?')">Savings advice</button>
-        <button onclick="quickQuestion('How should I create a budget?')">Create a budget</button>
+
+        <button
+          onclick="quickQuestion('How can I reduce my expenses?')"
+        >
+          Reduce expenses
+        </button>
+
+        <button
+          onclick="quickQuestion('How much should I save each month?')"
+        >
+          Savings advice
+        </button>
+
+        <button
+          onclick="quickQuestion('How should I create a budget?')"
+        >
+          Create a budget
+        </button>
+
       </div>
 
     </section>
@@ -189,100 +611,297 @@
   </main>
 
 
-  <!-- TRANSACTION MODAL -->
-  <div id="transactionModal" class="modal">
+
+  <!-- ==========================================
+       TRANSACTION MODAL
+       ========================================== -->
+
+  <div
+    id="transactionModal"
+    class="modal"
+  >
 
     <div class="modal-content">
 
-      <button class="close" onclick="closeModal('transactionModal')">×</button>
+      <button
+        class="close"
+        onclick="closeModal('transactionModal')"
+      >
+        ×
+      </button>
 
-      <h2>Add Transaction</h2>
+      <h2>
+        Add Transaction
+      </h2>
 
-      <label>Type</label>
+      <label>
+        Type
+      </label>
+
       <select id="transactionType">
-        <option value="income">Income</option>
-        <option value="expense">Expense</option>
+
+        <option value="income">
+          Income
+        </option>
+
+        <option value="expense">
+          Expense
+        </option>
+
       </select>
 
-      <label>Description</label>
-      <input id="transactionDescription" type="text" placeholder="e.g. Salary">
 
-      <label>Amount (₦)</label>
-      <input id="transactionAmount" type="number" placeholder="50000">
+      <label>
+        Description
+      </label>
 
-      <label>Category</label>
+      <input
+        id="transactionDescription"
+        type="text"
+        placeholder="e.g. Salary"
+      >
+
+
+      <label>
+        Amount (₦)
+      </label>
+
+      <input
+        id="transactionAmount"
+        type="number"
+        placeholder="50000"
+      >
+
+
+      <label>
+        Category
+      </label>
+
       <select id="transactionCategory">
-        <option>Salary</option>
-        <option>Food</option>
-        <option>Transport</option>
-        <option>Housing</option>
-        <option>Bills</option>
-        <option>Education</option>
-        <option>Shopping</option>
-        <option>Health</option>
-        <option>Investment</option>
-        <option>Other</option>
+
+        <option>
+          Salary
+        </option>
+
+        <option>
+          Food
+        </option>
+
+        <option>
+          Transport
+        </option>
+
+        <option>
+          Housing
+        </option>
+
+        <option>
+          Bills
+        </option>
+
+        <option>
+          Education
+        </option>
+
+        <option>
+          Shopping
+        </option>
+
+        <option>
+          Health
+        </option>
+
+        <option>
+          Investment
+        </option>
+
+        <option>
+          Other
+        </option>
+
       </select>
 
-      <button class="primary full" onclick="addTransaction()">Save Transaction</button>
+
+      <button
+        class="primary full"
+        onclick="addTransaction()"
+      >
+        Save Transaction
+      </button>
 
     </div>
 
   </div>
 
 
-  <!-- GOAL MODAL -->
-  <div id="goalModal" class="modal">
+
+  <!-- ==========================================
+       GOAL MODAL
+       ========================================== -->
+
+  <div
+    id="goalModal"
+    class="modal"
+  >
 
     <div class="modal-content">
 
-      <button class="close" onclick="closeModal('goalModal')">×</button>
+      <button
+        class="close"
+        onclick="closeModal('goalModal')"
+      >
+        ×
+      </button>
 
-      <h2>New Savings Goal</h2>
+      <h2>
+        New Savings Goal
+      </h2>
 
-      <label>Goal Name</label>
-      <input id="goalName" type="text" placeholder="e.g. Emergency Fund">
 
-      <label>Target Amount (₦)</label>
-      <input id="goalTarget" type="number" placeholder="500000">
+      <label>
+        Goal Name
+      </label>
 
-      <label>Amount Already Saved (₦)</label>
-      <input id="goalSaved" type="number" placeholder="0">
+      <input
+        id="goalName"
+        type="text"
+        placeholder="e.g. Emergency Fund"
+      >
 
-      <button class="primary full" onclick="addGoal()">Save Goal</button>
+
+      <label>
+        Target Amount (₦)
+      </label>
+
+      <input
+        id="goalTarget"
+        type="number"
+        placeholder="500000"
+      >
+
+
+      <label>
+        Amount Already Saved (₦)
+      </label>
+
+      <input
+        id="goalSaved"
+        type="number"
+        placeholder="0"
+      >
+
+
+      <button
+        class="primary full"
+        onclick="addGoal()"
+      >
+        Save Goal
+      </button>
 
     </div>
 
   </div>
 
 
-  <!-- INVESTMENT MODAL -->
-  <div id="investmentModal" class="modal">
+
+  <!-- ==========================================
+       INVESTMENT MODAL
+       ========================================== -->
+
+  <div
+    id="investmentModal"
+    class="modal"
+  >
 
     <div class="modal-content">
 
-      <button class="close" onclick="closeModal('investmentModal')">×</button>
+      <button
+        class="close"
+        onclick="closeModal('investmentModal')"
+      >
+        ×
+      </button>
 
-      <h2>Add Investment</h2>
+      <h2>
+        Add Investment
+      </h2>
 
-      <label>Investment Name</label>
-      <input id="investmentName" type="text" placeholder="e.g. Nigerian Stocks">
 
-      <label>Amount Invested (₦)</label>
-      <input id="investmentAmount" type="number" placeholder="100000">
+      <label>
+        Investment Name
+      </label>
 
-      <label>Current Value (₦)</label>
-      <input id="investmentValue" type="number" placeholder="105000">
+      <input
+        id="investmentName"
+        type="text"
+        placeholder="e.g. Nigerian Stocks"
+      >
 
-      <button class="primary full" onclick="addInvestment()">Save Investment</button>
+
+      <label>
+        Amount Invested (₦)
+      </label>
+
+      <input
+        id="investmentAmount"
+        type="number"
+        placeholder="100000"
+      >
+
+
+      <label>
+        Current Value (₦)
+      </label>
+
+      <input
+        id="investmentValue"
+        type="number"
+        placeholder="105000"
+      >
+
+
+      <button
+        class="primary full"
+        onclick="addInvestment()"
+      >
+        Save Investment
+      </button>
 
     </div>
 
   </div>
 
+
+
+  <!-- ==========================================
+       SUPABASE
+       ========================================== -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+
+    const SUPABASE_URL =
+      "https://pgbetpprhyrplrzxjzvb.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+      "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+
+    const supabaseClient =
+      supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+  </script>
+
+
+  <!-- MAIN JAVASCRIPT -->
 
   <script src="app.js"></script>
 
 </body>
+
+</html>
 </html>
 ```
