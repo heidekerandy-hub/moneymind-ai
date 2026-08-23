@@ -1,2075 +1,1322 @@
-// ============================================================
-// MONEY MIND AI - COMPLETE APP.JS
-// ============================================================
+```html
+<!DOCTYPE html>
+<html lang="en">
 
-"use strict";
+<head>
 
-// ============================================================
-// SUPABASE
-// ============================================================
+  <meta charset="UTF-8">
 
-const supabaseClient = window.supabaseClient || null;
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-const AI_URL =
-  "https://pgbetpprhyrplrzxjzvb.supabase.co/functions/v1/smart-responder";
+  <meta
+    name="theme-color"
+    content="#0f172a"
+  >
+
+  <meta
+    name="description"
+    content="MoneyMind AI - Personalized Financial Assistant"
+  >
+
+  <title>MoneyMind AI</title>
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+</head>
 
 
-// ============================================================
-// GLOBAL DATA
-// ============================================================
+<body>
 
-let transactions = loadArray("mm_transactions");
-let goals = loadArray("mm_goals");
-let investments = loadArray("mm_investments");
+<!-- =====================================================
+     AUTHENTICATION SCREEN
+===================================================== -->
+
+<div
+  id="authScreen"
+  class="auth-screen"
+>
+
+  <div class="auth-card">
+
+    <div class="logo auth-logo">
+      M
+    </div>
+
+    <h1>
+      MoneyMind AI
+    </h1>
+
+    <p class="auth-subtitle">
+      Your smarter money companion
+    </p>
 
 
-// ============================================================
-// SAFE ARRAY LOADER
-// ============================================================
+    <!-- ================= LOGIN ================= -->
 
-function loadArray(key) {
+    <div id="loginForm">
 
-  try {
+      <h2>
+        Welcome Back
+      </h2>
 
-    const saved = localStorage.getItem(key);
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="Email address"
+        autocomplete="email"
+      >
 
-    if (!saved) {
-      return [];
-    }
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+      >
 
-    const parsed = JSON.parse(saved);
+      <button
+        id="loginButton"
+        type="button"
+        class="primary full"
+      >
+        Login
+      </button>
 
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
+      <p class="auth-switch">
 
-    console.warn(key + " is not an array. Resetting.");
+        Don't have an account?
 
-    localStorage.removeItem(key);
+        <button
+          id="showSignupButton"
+          type="button"
+        >
+          Create one
+        </button>
 
-    return [];
+      </p>
 
-  } catch (error) {
+    </div>
 
-    console.error(
-      "Could not load " + key,
-      error
+
+    <!-- ================= SIGNUP ================= -->
+
+    <div
+      id="signupForm"
+      class="hidden"
+    >
+
+      <h2>
+        Create Account
+      </h2>
+
+      <input
+        id="signupEmail"
+        type="email"
+        placeholder="Email address"
+        autocomplete="email"
+      >
+
+      <input
+        id="signupPassword"
+        type="password"
+        placeholder="Create password"
+        autocomplete="new-password"
+      >
+
+      <button
+        id="signupButton"
+        type="button"
+        class="primary full"
+      >
+        Create Account
+      </button>
+
+      <p class="auth-switch">
+
+        Already have an account?
+
+        <button
+          id="showLoginButton"
+          type="button"
+        >
+          Login
+        </button>
+
+      </p>
+
+    </div>
+
+
+    <p
+      id="authMessage"
+      class="auth-message"
+    ></p>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     MAIN APPLICATION
+===================================================== -->
+
+<div
+  id="app"
+  class="app hidden"
+>
+
+
+  <!-- ===================================================
+       TOP BAR
+  ==================================================== -->
+
+  <header class="topbar">
+
+    <div class="brand">
+
+      <div class="logo">
+        M
+      </div>
+
+      <div class="brand-text">
+
+        <h1>
+          MoneyMind AI
+        </h1>
+
+        <p>
+          Your smarter money companion
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="topbar-actions">
+
+      <span
+        id="userEmail"
+        class="user-email"
+      ></span>
+
+      <button
+        id="menuButton"
+        class="menu-btn"
+        type="button"
+        aria-label="Open menu"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
+
+    </div>
+
+  </header>
+
+
+
+  <!-- ===================================================
+       NAVIGATION MENU
+  ==================================================== -->
+
+  <nav
+    id="mobileMenu"
+    class="mobile-menu"
+    aria-hidden="true"
+  >
+
+    <button
+      type="button"
+      class="nav-item active"
+      data-section="dashboard"
+    >
+      <span>🏠</span>
+      Dashboard
+    </button>
+
+
+    <button
+      type="button"
+      class="nav-item"
+      data-section="transactions"
+    >
+      <span>💳</span>
+      Transactions
+    </button>
+
+
+    <button
+      type="button"
+      class="nav-item"
+      data-section="goals"
+    >
+      <span>🎯</span>
+      Savings Goals
+    </button>
+
+
+    <button
+      type="button"
+      class="nav-item"
+      data-section="investments"
+    >
+      <span>📈</span>
+      Investments
+    </button>
+
+
+    <button
+      type="button"
+      class="nav-item"
+      data-section="assistant"
+    >
+      <span>🤖</span>
+      AI Assistant
+    </button>
+
+
+    <div class="menu-divider"></div>
+
+
+    <button
+      id="logoutButton"
+      type="button"
+      class="nav-item logout-item"
+    >
+      <span>🚪</span>
+      Logout
+    </button>
+
+  </nav>
+
+
+
+  <!-- ===================================================
+       MAIN CONTENT
+  ==================================================== -->
+
+  <main class="main-content">
+
+
+    <!-- =================================================
+         DASHBOARD
+    ================================================== -->
+
+    <section
+      id="dashboard"
+      class="section active"
+    >
+
+      <div class="welcome">
+
+        <div>
+
+          <p class="eyebrow">
+            PERSONAL FINANCE
+          </p>
+
+          <h2>
+            Good day 👋
+          </h2>
+
+          <p>
+            Take control of your money,
+            one decision at a time.
+          </p>
+
+        </div>
+
+
+        <button
+          id="dashboardAddTransaction"
+          type="button"
+          class="primary"
+        >
+          + Add Transaction
+        </button>
+
+      </div>
+
+
+
+      <!-- SUMMARY CARDS -->
+
+      <div class="cards">
+
+
+        <div class="card">
+
+          <div class="card-icon income-icon">
+            ↑
+          </div>
+
+          <div>
+
+            <span>
+              Total Income
+            </span>
+
+            <strong id="totalIncome">
+              ₦0
+            </strong>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="card">
+
+          <div class="card-icon expense-icon">
+            ↓
+          </div>
+
+          <div>
+
+            <span>
+              Total Expenses
+            </span>
+
+            <strong id="totalExpenses">
+              ₦0
+            </strong>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="card">
+
+          <div class="card-icon balance-icon">
+            ₦
+          </div>
+
+          <div>
+
+            <span>
+              Balance
+            </span>
+
+            <strong id="balance">
+              ₦0
+            </strong>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="card">
+
+          <div>
+
+            <span>
+              Savings Rate
+            </span>
+
+            <strong id="dashboardSavingsRate">
+              0%
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- =================================================
+           FINANCIAL HEALTH
+      ================================================== -->
+
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h3>
+              Financial Health
+            </h3>
+
+            <p>
+              Your current money position
+            </p>
+
+          </div>
+
+          <div
+            id="healthScore"
+            class="health-score"
+          >
+            0%
+          </div>
+
+        </div>
+
+
+        <div class="health">
+
+          <div class="health-info">
+
+            <h4 id="healthTitle">
+              Let's get started
+            </h4>
+
+            <p id="healthMessage">
+              Add your income and expenses
+              to see your financial health.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- =================================================
+           MONEY MIND INSIGHT
+      ================================================== -->
+
+      <div class="panel insight-panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h3>
+              MoneyMind Insight
+            </h3>
+
+            <p>
+              Personalized from your financial activity
+            </p>
+
+          </div>
+
+          <span class="ai-badge">
+            AI
+          </span>
+
+        </div>
+
+
+        <div id="personalInsight">
+
+          Add some transactions and MoneyMind
+          will generate a personalized financial insight.
+
+        </div>
+
+      </div>
+
+
+
+      <!-- =================================================
+           RECENT TRANSACTIONS
+      ================================================== -->
+
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h3>
+              Recent Transactions
+            </h3>
+
+            <p>
+              Your latest financial activity
+            </p>
+
+          </div>
+
+
+          <button
+            id="viewTransactionsButton"
+            type="button"
+            class="text-button"
+          >
+            View all →
+          </button>
+
+        </div>
+
+
+        <div
+          id="recentTransactions"
+          class="transaction-list"
+        >
+
+          <p class="empty">
+            No transactions yet.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         TRANSACTIONS
+    ================================================== -->
+
+    <section
+      id="transactions"
+      class="section"
+    >
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            MONEY ACTIVITY
+          </p>
+
+          <h2>
+            Transactions
+          </h2>
+
+          <p>
+            Track where your money comes from
+            and where it goes.
+          </p>
+
+        </div>
+
+
+        <button
+          id="transactionsAddButton"
+          type="button"
+          class="primary"
+        >
+          + Add Transaction
+        </button>
+
+      </div>
+
+
+      <div
+        id="allTransactions"
+        class="transaction-list"
+      >
+
+        <p class="empty">
+          No transactions yet.
+        </p>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         SAVINGS GOALS
+    ================================================== -->
+
+    <section
+      id="goals"
+      class="section"
+    >
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            PLAN YOUR FUTURE
+          </p>
+
+          <h2>
+            Savings Goals
+          </h2>
+
+          <p>
+            Turn your plans into measurable progress.
+          </p>
+
+        </div>
+
+
+        <button
+          id="goalAddButton"
+          type="button"
+          class="primary"
+        >
+          + New Goal
+        </button>
+
+      </div>
+
+
+      <div
+        id="goalsList"
+        class="goal-grid"
+      >
+
+        <p class="empty">
+          No savings goals yet.
+        </p>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         INVESTMENTS
+    ================================================== -->
+
+    <section
+      id="investments"
+      class="section"
+    >
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            BUILD WEALTH
+          </p>
+
+          <h2>
+            Investments
+          </h2>
+
+          <p>
+            Keep track of your investment portfolio.
+          </p>
+
+        </div>
+
+
+        <button
+          id="investmentAddButton"
+          type="button"
+          class="primary"
+        >
+          + Investment
+        </button>
+
+      </div>
+
+
+
+      <!-- INVESTMENT SUMMARY -->
+
+      <div class="cards">
+
+
+        <div class="card">
+
+          <span>
+            Total Invested
+          </span>
+
+          <strong id="totalInvested">
+            ₦0
+          </strong>
+
+        </div>
+
+
+        <div class="card">
+
+          <span>
+            Current Value
+          </span>
+
+          <strong id="investmentValue">
+            ₦0
+          </strong>
+
+        </div>
+
+
+        <div class="card">
+
+          <span>
+            Gain / Loss
+          </span>
+
+          <strong id="investmentGain">
+            ₦0
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="investmentsList"
+        class="investment-grid"
+      >
+
+        <p class="empty">
+          No investments recorded yet.
+        </p>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         AI ASSISTANT
+    ================================================== -->
+
+    <section
+      id="assistant"
+      class="section"
+    >
+
+
+      <div class="assistant-header">
+
+        <div class="ai-icon">
+          🤖
+        </div>
+
+        <div>
+
+          <p class="eyebrow">
+            SMART MONEY
+          </p>
+
+          <h2>
+            MoneyMind AI
+          </h2>
+
+          <p>
+            Your personalized financial thinking partner.
+          </p>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- AI SNAPSHOT -->
+
+      <div class="ai-snapshot">
+
+
+        <div>
+
+          <span>
+            Income
+          </span>
+
+          <strong id="aiIncome">
+            ₦0
+          </strong>
+
+        </div>
+
+
+        <div>
+
+          <span>
+            Expenses
+          </span>
+
+          <strong id="aiExpenses">
+            ₦0
+          </strong>
+
+        </div>
+
+
+        <div>
+
+          <span>
+            Balance
+          </span>
+
+          <strong id="aiBalance">
+            ₦0
+          </strong>
+
+        </div>
+
+
+        <div>
+
+          <span>
+            Savings
+          </span>
+
+          <strong id="aiSavingsRate">
+            0%
+          </strong>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- CHAT -->
+
+      <div
+        id="chatMessages"
+        class="chat-box"
+      >
+
+        <div class="message ai">
+
+          Hi! I'm MoneyMind AI. 👋
+
+          <br><br>
+
+          I can help you analyze your income,
+          expenses, savings goals and investments.
+
+          Ask me anything about your money.
+
+        </div>
+
+      </div>
+
+
+
+      <!-- CHAT INPUT -->
+
+      <div class="chat-input">
+
+        <input
+          id="aiInput"
+          type="text"
+          placeholder="Ask MoneyMind AI something..."
+          autocomplete="off"
+        >
+
+
+        <button
+          id="sendAIButton"
+          type="button"
+          class="primary"
+        >
+          Send
+        </button>
+
+      </div>
+
+
+
+      <!-- SUGGESTIONS -->
+
+      <div class="suggestions">
+
+
+        <button
+          type="button"
+          data-question="Analyze my financial situation"
+        >
+          Analyze my finances
+        </button>
+
+
+        <button
+          type="button"
+          data-question="How can I reduce my expenses?"
+        >
+          Reduce expenses
+        </button>
+
+
+        <button
+          type="button"
+          data-question="How much should I save each month?"
+        >
+          Savings advice
+        </button>
+
+
+        <button
+          type="button"
+          data-question="How should I create a budget?"
+        >
+          Create a budget
+        </button>
+
+
+        <button
+          type="button"
+          data-question="How should I improve my investments?"
+        >
+          Investment advice
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+
+<!-- =====================================================
+     TRANSACTION MODAL
+===================================================== -->
+
+<div
+  id="transactionModal"
+  class="modal"
+>
+
+  <div class="modal-content">
+
+
+    <button
+      type="button"
+      class="close"
+      data-close="transactionModal"
+    >
+      ×
+    </button>
+
+
+    <h2>
+      Add Transaction
+    </h2>
+
+
+    <label for="transactionType">
+      Type
+    </label>
+
+
+    <select id="transactionType">
+
+      <option value="income">
+        Income
+      </option>
+
+      <option value="expense">
+        Expense
+      </option>
+
+    </select>
+
+
+
+    <label for="transactionDescription">
+      Description
+    </label>
+
+
+    <input
+      id="transactionDescription"
+      type="text"
+      placeholder="e.g. Salary"
+    >
+
+
+
+    <label for="transactionAmount">
+      Amount (₦)
+    </label>
+
+
+    <input
+      id="transactionAmount"
+      type="number"
+      min="1"
+      placeholder="50000"
+    >
+
+
+
+    <label for="transactionCategory">
+      Category
+    </label>
+
+
+    <select id="transactionCategory">
+
+      <option value="Salary">
+        Salary
+      </option>
+
+      <option value="Business">
+        Business
+      </option>
+
+      <option value="Food">
+        Food
+      </option>
+
+      <option value="Transport">
+        Transport
+      </option>
+
+      <option value="Housing">
+        Housing
+      </option>
+
+      <option value="Bills">
+        Bills
+      </option>
+
+      <option value="Education">
+        Education
+      </option>
+
+      <option value="Shopping">
+        Shopping
+      </option>
+
+      <option value="Health">
+        Health
+      </option>
+
+      <option value="Investment">
+        Investment
+      </option>
+
+      <option value="Other">
+        Other
+      </option>
+
+    </select>
+
+
+
+    <button
+      id="saveTransactionButton"
+      type="button"
+      class="primary full"
+    >
+      Save Transaction
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     SAVINGS GOAL MODAL
+===================================================== -->
+
+<div
+  id="goalModal"
+  class="modal"
+>
+
+  <div class="modal-content">
+
+
+    <button
+      type="button"
+      class="close"
+      data-close="goalModal"
+    >
+      ×
+    </button>
+
+
+    <h2>
+      New Savings Goal
+    </h2>
+
+
+    <label for="goalName">
+      Goal Name
+    </label>
+
+
+    <input
+      id="goalName"
+      type="text"
+      placeholder="e.g. Emergency Fund"
+    >
+
+
+
+    <label for="goalTarget">
+      Target Amount (₦)
+    </label>
+
+
+    <input
+      id="goalTarget"
+      type="number"
+      min="1"
+      placeholder="500000"
+    >
+
+
+
+    <label for="goalSaved">
+      Amount Already Saved (₦)
+    </label>
+
+
+    <input
+      id="goalSaved"
+      type="number"
+      min="0"
+      placeholder="0"
+    >
+
+
+
+    <button
+      id="saveGoalButton"
+      type="button"
+      class="primary full"
+    >
+      Save Goal
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     INVESTMENT MODAL
+===================================================== -->
+
+<div
+  id="investmentModal"
+  class="modal"
+>
+
+  <div class="modal-content">
+
+
+    <button
+      type="button"
+      class="close"
+      data-close="investmentModal"
+    >
+      ×
+    </button>
+
+
+    <h2>
+      Add Investment
+    </h2>
+
+
+
+    <label for="investmentName">
+      Investment Name
+    </label>
+
+
+    <input
+      id="investmentName"
+      type="text"
+      placeholder="e.g. Nigerian Stocks"
+    >
+
+
+
+    <label for="investmentAmount">
+      Amount Invested (₦)
+    </label>
+
+
+    <input
+      id="investmentAmount"
+      type="number"
+      min="1"
+      placeholder="100000"
+    >
+
+
+
+    <label for="investmentCurrentValue">
+      Current Value (₦)
+    </label>
+
+
+    <input
+      id="investmentCurrentValue"
+      type="number"
+      min="0"
+      placeholder="105000"
+    >
+
+
+
+    <button
+      id="saveInvestmentButton"
+      type="button"
+      class="primary full"
+    >
+      Save Investment
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     SUPABASE
+     LOAD ONCE
+===================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script>
+
+  window.supabaseClient =
+    window.supabase.createClient(
+      "https://pgbetpprhyrplrzxjzvb.supabase.co",
+      "sb_publishable_zLKUr9LyfrZCMNv8obdY3A_Z46AgwB8"
     );
 
-    localStorage.removeItem(key);
+</script>
 
-    return [];
-  }
-}
 
 
-// ============================================================
-// SAVE DATA
-// ============================================================
+<!-- =====================================================
+     MONEY MIND JAVASCRIPT
+     LOAD EXACTLY ONCE
+===================================================== -->
 
-function saveData() {
+<script src="app.js"></script>
 
-  localStorage.setItem(
-    "mm_transactions",
-    JSON.stringify(transactions)
-  );
 
-  localStorage.setItem(
-    "mm_goals",
-    JSON.stringify(goals)
-  );
+</body>
+</html>
+```
 
-  localStorage.setItem(
-    "mm_investments",
-    JSON.stringify(investments)
-  );
-}
-
-
-// ============================================================
-// HTML ESCAPE
-// ============================================================
-
-function escapeHTML(value) {
-
-  const div = document.createElement("div");
-
-  div.textContent = String(value ?? "");
-
-  return div.innerHTML;
-}
-
-
-// ============================================================
-// MONEY FORMAT
-// ============================================================
-
-function formatMoney(amount) {
-
-  const value = Number(amount) || 0;
-
-  return new Intl.NumberFormat(
-    "en-NG",
-    {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 0
-    }
-  ).format(value);
-}
-
-
-// ============================================================
-// DATE FORMAT
-// ============================================================
-
-function formatDate(date) {
-
-  const parsed = new Date(date);
-
-  if (Number.isNaN(parsed.getTime())) {
-    return "";
-  }
-
-  return parsed.toLocaleDateString(
-    "en-NG",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    }
-  );
-}
-
-
-// ============================================================
-// AUTH MESSAGE
-// ============================================================
-
-function showAuthMessage(message) {
-
-  const element =
-    document.getElementById("authMessage");
-
-  if (element) {
-    element.textContent = message || "";
-  }
-}
-
-
-// ============================================================
-// SHOW AUTHENTICATION
-// ============================================================
-
-function showAuthentication() {
-
-  const authScreen =
-    document.getElementById("authScreen");
-
-  if (authScreen) {
-    authScreen.style.display = "flex";
-  }
-}
-
-
-// ============================================================
-// SHOW APPLICATION
-// ============================================================
-
-function showApplication(user) {
-
-  const authScreen =
-    document.getElementById("authScreen");
-
-  if (authScreen) {
-    authScreen.style.display = "none";
-  }
-
-  console.log(
-    "Logged in:",
-    user?.email || "User"
-  );
-}
-
-
-// ============================================================
-// CHECK AUTH
-// ============================================================
-
-async function checkAuth() {
-
-  if (!supabaseClient) {
-
-    console.error(
-      "Supabase client not found."
-    );
-
-    showAuthMessage(
-      "Authentication service unavailable."
-    );
-
-    showAuthentication();
-
-    return;
-  }
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.getSession();
-
-    if (error) {
-      throw error;
-    }
-
-    if (data && data.session) {
-
-      showApplication(
-        data.session.user
-      );
-
-    } else {
-
-      showAuthentication();
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Authentication error:",
-      error
-    );
-
-    showAuthentication();
-  }
-}
-
-
-// ============================================================
-// LOGIN
-// ============================================================
-
-async function loginUser() {
-
-  const emailInput =
-    document.getElementById("loginEmail");
-
-  const passwordInput =
-    document.getElementById("loginPassword");
-
-  if (!emailInput || !passwordInput) {
-
-    console.error(
-      "Login fields not found."
-    );
-
-    return;
-  }
-
-  const email =
-    emailInput.value.trim();
-
-  const password =
-    passwordInput.value;
-
-  if (!email || !password) {
-
-    showAuthMessage(
-      "Please enter your email and password."
-    );
-
-    return;
-  }
-
-  if (!supabaseClient) {
-
-    showAuthMessage(
-      "Authentication service unavailable."
-    );
-
-    return;
-  }
-
-  showAuthMessage(
-    "Logging in..."
-  );
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-    if (error) {
-      throw error;
-    }
-
-    console.log(
-      "Login successful:",
-      data.user?.email
-    );
-
-    showAuthMessage(
-      "Login successful."
-    );
-
-    showApplication(
-      data.user
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Login error:",
-      error
-    );
-
-    showAuthMessage(
-      error.message ||
-      "Login failed. Please check your email and password."
-    );
-  }
-}
-
-
-// ============================================================
-// SIGN UP
-// ============================================================
-
-async function signupUser() {
-
-  const emailInput =
-    document.getElementById("signupEmail");
-
-  const passwordInput =
-    document.getElementById("signupPassword");
-
-  if (!emailInput || !passwordInput) {
-    return;
-  }
-
-  const email =
-    emailInput.value.trim();
-
-  const password =
-    passwordInput.value;
-
-  if (!email || !password) {
-
-    showAuthMessage(
-      "Please enter your email and password."
-    );
-
-    return;
-  }
-
-  if (password.length < 6) {
-
-    showAuthMessage(
-      "Password must be at least 6 characters."
-    );
-
-    return;
-  }
-
-  if (!supabaseClient) {
-
-    showAuthMessage(
-      "Authentication service unavailable."
-    );
-
-    return;
-  }
-
-  showAuthMessage(
-    "Creating account..."
-  );
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
-
-    if (error) {
-      throw error;
-    }
-
-    if (data.session) {
-
-      showAuthMessage(
-        "Account created successfully."
-      );
-
-      showApplication(
-        data.user
-      );
-
-    } else {
-
-      showAuthMessage(
-        "Account created. Please check your email to confirm your account."
-      );
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Signup error:",
-      error
-    );
-
-    showAuthMessage(
-      error.message ||
-      "Unable to create account."
-    );
-  }
-}
-
-
-// ============================================================
-// AUTH FORM SWITCH
-// ============================================================
-
-function showSignup() {
-
-  const loginForm =
-    document.getElementById("loginForm");
-
-  const signupForm =
-    document.getElementById("signupForm");
-
-  if (loginForm) {
-    loginForm.style.display = "none";
-  }
-
-  if (signupForm) {
-    signupForm.style.display = "block";
-  }
-
-  showAuthMessage("");
-}
-
-
-function showLogin() {
-
-  const loginForm =
-    document.getElementById("loginForm");
-
-  const signupForm =
-    document.getElementById("signupForm");
-
-  if (signupForm) {
-    signupForm.style.display = "none";
-  }
-
-  if (loginForm) {
-    loginForm.style.display = "block";
-  }
-
-  showAuthMessage("");
-}
-
-
-// ============================================================
-// MOBILE MENU
-// ============================================================
-
-function toggleMenu() {
-
-  const menu =
-    document.getElementById("mobileMenu");
-
-  const button =
-    document.querySelector(".menu-btn");
-
-  if (!menu) {
-
-    console.error(
-      "mobileMenu element not found."
-    );
-
-    return;
-  }
-
-  const isOpen =
-    menu.classList.contains("open");
-
-  if (isOpen) {
-
-    menu.classList.remove("open");
-
-    menu.style.display = "";
-
-    if (button) {
-
-      button.setAttribute(
-        "aria-expanded",
-        "false"
-      );
-    }
-
-    console.log(
-      "Menu closed."
-    );
-
-  } else {
-
-    menu.classList.add("open");
-
-    menu.style.display = "flex";
-
-    if (button) {
-
-      button.setAttribute(
-        "aria-expanded",
-        "true"
-      );
-    }
-
-    console.log(
-      "Menu opened."
-    );
-  }
-}
-
-
-// ============================================================
-// CLOSE MENU
-// ============================================================
-
-function closeMenu() {
-
-  const menu =
-    document.getElementById("mobileMenu");
-
-  const button =
-    document.querySelector(".menu-btn");
-
-  if (menu) {
-
-    menu.classList.remove("open");
-
-    menu.style.display = "";
-  }
-
-  if (button) {
-
-    button.setAttribute(
-      "aria-expanded",
-      "false"
-    );
-  }
-}
-
-
-// ============================================================
-// NAVIGATION
-// ============================================================
-
-function showSection(sectionId) {
-
-  const sections =
-    document.querySelectorAll(".section");
-
-  sections.forEach(
-    function(section) {
-
-      section.classList.remove("active");
-
-    }
-  );
-
-  const target =
-    document.getElementById(sectionId);
-
-  if (!target) {
-
-    console.error(
-      "Section not found:",
-      sectionId
-    );
-
-    return;
-  }
-
-  target.classList.add("active");
-
-  closeMenu();
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-
-  console.log(
-    "Opened section:",
-    sectionId
-  );
-}
-
-
-// ============================================================
-// DASHBOARD CALCULATIONS
-// ============================================================
-
-function calculateFinancials() {
-
-  if (!Array.isArray(transactions)) {
-    transactions = [];
-  }
-
-  const income =
-    transactions
-      .filter(
-        function(item) {
-          return item.type === "income";
-        }
-      )
-      .reduce(
-        function(total, item) {
-          return total +
-            Number(item.amount || 0);
-        },
-        0
-      );
-
-  const expenses =
-    transactions
-      .filter(
-        function(item) {
-          return item.type === "expense";
-        }
-      )
-      .reduce(
-        function(total, item) {
-          return total +
-            Number(item.amount || 0);
-        },
-        0
-      );
-
-  const balance =
-    income - expenses;
-
-  const savingsRate =
-    income > 0
-      ? (balance / income) * 100
-      : 0;
-
-  return {
-    income,
-    expenses,
-    balance,
-    savingsRate
-  };
-}
-
-
-// ============================================================
-// UPDATE DASHBOARD
-// ============================================================
-
-function updateDashboard() {
-
-  const financials =
-    calculateFinancials();
-
-  const incomeElement =
-    document.getElementById("totalIncome");
-
-  const expenseElement =
-    document.getElementById("totalExpenses");
-
-  const balanceElement =
-    document.getElementById("balance");
-
-  if (incomeElement) {
-
-    incomeElement.textContent =
-      formatMoney(
-        financials.income
-      );
-  }
-
-  if (expenseElement) {
-
-    expenseElement.textContent =
-      formatMoney(
-        financials.expenses
-      );
-  }
-
-  if (balanceElement) {
-
-    balanceElement.textContent =
-      formatMoney(
-        financials.balance
-      );
-  }
-
-  updateHealth(
-    financials.income,
-    financials.expenses
-  );
-
-  renderRecentTransactions();
-}
-
-
-// ============================================================
-// FINANCIAL HEALTH
-// ============================================================
-
-function updateHealth(
-  income,
-  expenses
-) {
-
-  let score = 0;
-
-  if (income > 0) {
-
-    const savingsRate =
-      ((income - expenses) / income) * 100;
-
-    if (savingsRate >= 30) {
-
-      score = 100;
-
-    } else if (savingsRate >= 20) {
-
-      score = 85;
-
-    } else if (savingsRate >= 10) {
-
-      score = 70;
-
-    } else if (savingsRate >= 0) {
-
-      score = 50;
-
-    } else {
-
-      score = 20;
-    }
-  }
-
-  const scoreElement =
-    document.getElementById("healthScore");
-
-  const titleElement =
-    document.getElementById("healthTitle");
-
-  const messageElement =
-    document.getElementById("healthMessage");
-
-  if (scoreElement) {
-
-    scoreElement.textContent =
-      score + "%";
-  }
-
-  if (!titleElement || !messageElement) {
-    return;
-  }
-
-  if (score >= 85) {
-
-    titleElement.textContent =
-      "Excellent financial health";
-
-    messageElement.textContent =
-      "You're maintaining a strong savings position.";
-
-  } else if (score >= 70) {
-
-    titleElement.textContent =
-      "Good financial health";
-
-    messageElement.textContent =
-      "You're doing well. Look for opportunities to increase savings.";
-
-  } else if (score >= 50) {
-
-    titleElement.textContent =
-      "Needs attention";
-
-    messageElement.textContent =
-      "Your expenses are taking a significant portion of your income.";
-
-  } else if (score > 0) {
-
-    titleElement.textContent =
-      "Warning";
-
-    messageElement.textContent =
-      "Your spending may be higher than your income.";
-
-  } else {
-
-    titleElement.textContent =
-      "Let's get started";
-
-    messageElement.textContent =
-      "Add your income and expenses to see your financial health.";
-  }
-}
-
-
-// ============================================================
-// TRANSACTION MODAL
-// ============================================================
-
-function openTransactionModal() {
-
-  const modal =
-    document.getElementById(
-      "transactionModal"
-    );
-
-  if (modal) {
-
-    modal.classList.add("show");
-  }
-}
-
-
-// ============================================================
-// ADD TRANSACTION
-// ============================================================
-
-function addTransaction() {
-
-  const type =
-    document.getElementById(
-      "transactionType"
-    )?.value || "expense";
-
-  const description =
-    document.getElementById(
-      "transactionDescription"
-    )?.value.trim() || "";
-
-  const amount =
-    Number(
-      document.getElementById(
-        "transactionAmount"
-      )?.value
-    );
-
-  const category =
-    document.getElementById(
-      "transactionCategory"
-    )?.value || "Other";
-
-  if (
-    !description ||
-    !amount ||
-    amount <= 0
-  ) {
-
-    alert(
-      "Please enter a description and valid amount."
-    );
-
-    return;
-  }
-
-  transactions.unshift({
-
-    id:
-      Date.now(),
-
-    type:
-      type,
-
-    description:
-      description,
-
-    amount:
-      amount,
-
-    category:
-      category,
-
-    date:
-      new Date().toISOString()
-  });
-
-  saveData();
-
-  const descriptionInput =
-    document.getElementById(
-      "transactionDescription"
-    );
-
-  const amountInput =
-    document.getElementById(
-      "transactionAmount"
-    );
-
-  if (descriptionInput) {
-    descriptionInput.value = "";
-  }
-
-  if (amountInput) {
-    amountInput.value = "";
-  }
-
-  closeModal(
-    "transactionModal"
-  );
-
-  renderTransactions();
-
-  updateDashboard();
-}
-
-
-// ============================================================
-// DELETE TRANSACTION
-// ============================================================
-
-function deleteTransaction(id) {
-
-  if (
-    !confirm(
-      "Delete this transaction?"
-    )
-  ) {
-    return;
-  }
-
-  transactions =
-    transactions.filter(
-      function(item) {
-
-        return String(item.id) !==
-          String(id);
-      }
-    );
-
-  saveData();
-
-  renderTransactions();
-
-  updateDashboard();
-}
-
-
-// ============================================================
-// RENDER TRANSACTIONS
-// ============================================================
-
-function renderTransactions() {
-
-  const container =
-    document.getElementById(
-      "allTransactions"
-    );
-
-  if (!container) {
-    return;
-  }
-
-  if (
-    !Array.isArray(transactions) ||
-    transactions.length === 0
-  ) {
-
-    container.innerHTML =
-      '<p class="empty">No transactions yet.</p>';
-
-    return;
-  }
-
-  container.innerHTML =
-    transactions
-      .map(
-        function(transaction) {
-
-          const sign =
-            transaction.type === "income"
-              ? "+"
-              : "-";
-
-          return `
-            <div class="transaction">
-
-              <div class="transaction-info">
-
-                <strong>
-                  ${escapeHTML(
-                    transaction.description
-                  )}
-                </strong>
-
-                <small>
-                  ${escapeHTML(
-                    transaction.category || "Other"
-                  )}
-                  •
-                  ${formatDate(
-                    transaction.date
-                  )}
-                </small>
-
-              </div>
-
-              <div class="${transaction.type}">
-                ${sign}${formatMoney(
-                  transaction.amount
-                )}
-              </div>
-
-              <button
-                class="delete-btn"
-                onclick="deleteTransaction(${transaction.id})"
-              >
-                Delete
-              </button>
-
-            </div>
-          `;
-        }
-      )
-      .join("");
-}
-
-
-// ============================================================
-// RECENT TRANSACTIONS
-// ============================================================
-
-function renderRecentTransactions() {
-
-  const container =
-    document.getElementById(
-      "recentTransactions"
-    );
-
-  if (!container) {
-    return;
-  }
-
-  const recent =
-    transactions.slice(0, 5);
-
-  if (recent.length === 0) {
-
-    container.innerHTML =
-      '<p class="empty">No transactions yet.</p>';
-
-    return;
-  }
-
-  container.innerHTML =
-    recent
-      .map(
-        function(transaction) {
-
-          const sign =
-            transaction.type === "income"
-              ? "+"
-              : "-";
-
-          return `
-            <div class="transaction">
-
-              <div class="transaction-info">
-
-                <strong>
-                  ${escapeHTML(
-                    transaction.description
-                  )}
-                </strong>
-
-                <small>
-                  ${escapeHTML(
-                    transaction.category || "Other"
-                  )}
-                  •
-                  ${formatDate(
-                    transaction.date
-                  )}
-                </small>
-
-              </div>
-
-              <div class="${transaction.type}">
-                ${sign}${formatMoney(
-                  transaction.amount
-                )}
-              </div>
-
-            </div>
-          `;
-        }
-      )
-      .join("");
-}
-
-
-// ============================================================
-// GOAL MODAL
-// ============================================================
-
-function openGoalModal() {
-
-  const modal =
-    document.getElementById(
-      "goalModal"
-    );
-
-  if (modal) {
-
-    modal.classList.add("show");
-  }
-}
-
-
-// ============================================================
-// ADD GOAL
-// ============================================================
-
-function addGoal() {
-
-  const name =
-    document.getElementById(
-      "goalName"
-    )?.value.trim() || "";
-
-  const target =
-    Number(
-      document.getElementById(
-        "goalTarget"
-      )?.value
-    );
-
-  const saved =
-    Number(
-      document.getElementById(
-        "goalSaved"
-      )?.value
-    ) || 0;
-
-  if (
-    !name ||
-    !target ||
-    target <= 0
-  ) {
-
-    alert(
-      "Please enter a goal name and target amount."
-    );
-
-    return;
-  }
-
-  goals.push({
-
-    id:
-      Date.now(),
-
-    name:
-      name,
-
-    target:
-      target,
-
-    saved:
-      Math.max(0, saved)
-  });
-
-  saveData();
-
-  document.getElementById(
-    "goalName"
-  ).value = "";
-
-  document.getElementById(
-    "goalTarget"
-  ).value = "";
-
-  document.getElementById(
-    "goalSaved"
-  ).value = "";
-
-  closeModal(
-    "goalModal"
-  );
-
-  renderGoals();
-}
-
-
-// ============================================================
-// DELETE GOAL
-// ============================================================
-
-function deleteGoal(id) {
-
-  if (
-    !confirm(
-      "Delete this savings goal?"
-    )
-  ) {
-    return;
-  }
-
-  goals =
-    goals.filter(
-      function(goal) {
-
-        return String(goal.id) !==
-          String(id);
-      }
-    );
-
-  saveData();
-
-  renderGoals();
-}
-
-
-// ============================================================
-// RENDER GOALS
-// ============================================================
-
-function renderGoals() {
-
-  const container =
-    document.getElementById(
-      "goalsList"
-    );
-
-  if (!container) {
-    return;
-  }
-
-  if (
-    !Array.isArray(goals) ||
-    goals.length === 0
-  ) {
-
-    container.innerHTML =
-      '<p class="empty">No savings goals yet.</p>';
-
-    return;
-  }
-
-  container.innerHTML =
-    goals
-      .map(
-        function(goal) {
-
-          const target =
-            Number(goal.target) || 0;
-
-          const saved =
-            Number(goal.saved) || 0;
-
-          const percentage =
-            target > 0
-              ? Math.min(
-                  100,
-                  Math.round(
-                    (saved / target) * 100
-                  )
-                )
-              : 0;
-
-          return `
-            <div class="goal">
-
-              <h3>
-                ${escapeHTML(goal.name)}
-              </h3>
-
-              <p>
-                ${formatMoney(saved)}
-                saved of
-                ${formatMoney(target)}
-              </p>
-
-              <div class="progress">
-
-                <div
-                  class="progress-bar"
-                  style="width:${percentage}%"
-                ></div>
-
-              </div>
-
-              <strong>
-                ${percentage}% complete
-              </strong>
-
-              <br><br>
-
-              <button
-                class="delete-btn"
-                onclick="deleteGoal(${goal.id})"
-              >
-                Delete
-              </button>
-
-            </div>
-          `;
-        }
-      )
-      .join("");
-}
-
-
-// ============================================================
-// INVESTMENT MODAL
-// ============================================================
-
-function openInvestmentModal() {
-
-  const modal =
-    document.getElementById(
-      "investmentModal"
-    );
-
-  if (modal) {
-
-    modal.classList.add("show");
-  }
-}
-
-
-// ============================================================
-// ADD INVESTMENT
-// ============================================================
-
-function addInvestment() {
-
-  const name =
-    document.getElementById(
-      "investmentName"
-    )?.value.trim() || "";
-
-  const amount =
-    Number(
-      document.getElementById(
-        "investmentAmount"
-      )?.value
-    );
-
-  const value =
-    Number(
-      document.getElementById(
-        "investmentValue"
-      )?.value
-    ) || amount;
-
-  if (
-    !name ||
-    !amount ||
-    amount <= 0
-  ) {
-
-    alert(
-      "Please enter investment name and amount."
-    );
-
-    return;
-  }
-
-  investments.push({
-
-    id:
-      Date.now(),
-
-    name:
-      name,
-
-    amount:
-      amount,
-
-    value:
-      value
-  });
-
-  saveData();
-
-  document.getElementById(
-    "investmentName"
-  ).value = "";
-
-  document.getElementById(
-    "investmentAmount"
-  ).value = "";
-
-  document.getElementById(
-    "investmentValue"
-  ).value = "";
-
-  closeModal(
-    "investmentModal"
-  );
-
-  renderInvestments();
-}
-
-
-// ============================================================
-// DELETE INVESTMENT
-// ============================================================
-
-function deleteInvestment(id) {
-
-  if (
-    !confirm(
-      "Delete this investment?"
-    )
-  ) {
-    return;
-  }
-
-  investments =
-    investments.filter(
-      function(investment) {
-
-        return String(investment.id) !==
-          String(id);
-      }
-    );
-
-  saveData();
-
-  renderInvestments();
-}
-
-
-// ============================================================
-// RENDER INVESTMENTS
-// ============================================================
-
-function renderInvestments() {
-
-  const container =
-    document.getElementById(
-      "investmentsList"
-    );
-
-  if (!container) {
-    return;
-  }
-
-  if (
-    !Array.isArray(investments) ||
-    investments.length === 0
-  ) {
-
-    container.innerHTML =
-      '<p class="empty">No investments recorded yet.</p>';
-
-    return;
-  }
-
-  container.innerHTML =
-    investments
-      .map(
-        function(investment) {
-
-          const invested =
-            Number(
-              investment.amount || 0
-            );
-
-          const value =
-            Number(
-              investment.value || 0
-            );
-
-          const gain =
-            value - invested;
-
-          return `
-            <div class="investment">
-
-              <h3>
-                ${escapeHTML(
-                  investment.name
-                )}
-              </h3>
-
-              <p>
-                Invested:
-                ${formatMoney(invested)}
-              </p>
-
-              <p>
-                Current value:
-                ${formatMoney(value)}
-              </p>
-
-              <strong class="${
-                gain >= 0
-                  ? "income"
-                  : "expense"
-              }">
-
-                ${gain >= 0 ? "+" : ""}
-                ${formatMoney(gain)}
-
-              </strong>
-
-              <br><br>
-
-              <button
-                class="delete-btn"
-                onclick="deleteInvestment(${investment.id})"
-              >
-                Delete
-              </button>
-
-            </div>
-          `;
-        }
-      )
-      .join("");
-}
-
-
-// ============================================================
-// AI CHAT MESSAGE
-// ============================================================
-
-function addChatMessage(
-  message,
-  type
-) {
-
-  const chat =
-    document.getElementById(
-      "chatMessages"
-    );
-
-  if (!chat) {
-    return;
-  }
-
-  const div =
-    document.createElement("div");
-
-  div.className =
-    "message " + type;
-
-  div.textContent =
-    message;
-
-  chat.appendChild(div);
-
-  chat.scrollTop =
-    chat.scrollHeight;
-}
-
-
-// ============================================================
-// ASK AI
-// ============================================================
-
-async function askAI() {
-
-  const input =
-    document.getElementById(
-      "aiInput"
-    );
-
-  const chat =
-    document.getElementById(
-      "chatMessages"
-    );
-
-  if (!input || !chat) {
-
-    console.error(
-      "AI chat elements not found."
-    );
-
-    return;
-  }
-
-  const question =
-    input.value.trim();
-
-  if (!question) {
-    return;
-  }
-
-  addChatMessage(
-    question,
-    "user"
-  );
-
-  input.value = "";
-
-  const thinking =
-    document.createElement("div");
-
-  thinking.className =
-    "message ai";
-
-  thinking.textContent =
-    "MoneyMind AI is thinking...";
-
-  chat.appendChild(
-    thinking
-  );
-
-  chat.scrollTop =
-    chat.scrollHeight;
-
-  const financials =
-    calculateFinancials();
-
-  const invested =
-    investments.reduce(
-      function(total, item) {
-
-        return total +
-          Number(item.amount || 0);
-
-      },
-      0
-    );
-
-  const investmentValue =
-    investments.reduce(
-      function(total, item) {
-
-        return total +
-          Number(item.value || 0);
-
-      },
-      0
-    );
-
-  const financialData = {
-
-    income:
-      financials.income,
-
-    expenses:
-      financials.expenses,
-
-    balance:
-      financials.balance,
-
-    savingsRate:
-      Number(
-        financials.savingsRate.toFixed(1)
-      ),
-
-    investments:
-      invested,
-
-    investmentValue:
-      investmentValue,
-
-    investmentGain:
-      investmentValue - invested,
-
-    savingsGoals:
-      goals,
-
-    transactions:
-      transactions,
-
-    investmentRecords:
-      investments
-  };
-
-  try {
-
-    const response =
-      await fetch(
-        AI_URL,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body:
-            JSON.stringify({
-
-              message:
-                question,
-
-              financialData:
-                financialData
-            })
-        }
-      );
-
-    let data = {};
-
-    try {
-
-      data =
-        await response.json();
-
-    } catch (error) {
-
-      console.warn(
-        "AI response was not JSON."
-      );
-    }
-
-    if (!response.ok) {
-
-      throw new Error(
-        data.error ||
-        data.message ||
-        "AI request failed."
-      );
-    }
-
-    thinking.textContent =
-      data.reply ||
-      data.message ||
-      "I could not generate a response.";
-
-  } catch (error) {
-
-    console.error(
-      "AI error:",
-      error
-    );
-
-    thinking.textContent =
-      "MoneyMind AI could not connect right now.";
-  }
-
-  chat.scrollTop =
-    chat.scrollHeight;
-}
-
-
-// ============================================================
-// QUICK QUESTIONS
-// ============================================================
-
-function quickQuestion(question) {
-
-  const input =
-    document.getElementById(
-      "aiInput"
-    );
-
-  if (!input) {
-    return;
-  }
-
-  input.value =
-    question;
-
-  askAI();
-}
-
-
-// ============================================================
-// MODALS
-// ============================================================
-
-function closeModal(id) {
-
-  const modal =
-    document.getElementById(id);
-
-  if (modal) {
-
-    modal.classList.remove(
-      "show"
-    );
-  }
-}
-
-
-// ============================================================
-// CLOSE MODAL OUTSIDE CLICK
-// ============================================================
-
-function setupModalClosing() {
-
-  document.addEventListener(
-    "click",
-    function(event) {
-
-      if (
-        event.target.classList &&
-        event.target.classList.contains("modal")
-      ) {
-
-        event.target.classList.remove(
-          "show"
-        );
-      }
-
-    }
-  );
-}
-
-
-// ============================================================
-// CLOSE MOBILE MENU WHEN CLICKING OUTSIDE
-// ============================================================
-
-function setupMenuClosing() {
-
-  document.addEventListener(
-    "click",
-    function(event) {
-
-      const menu =
-        document.getElementById(
-          "mobileMenu"
-        );
-
-      const button =
-        document.querySelector(
-          ".menu-btn"
-        );
-
-      if (!menu || !button) {
-        return;
-      }
-
-      const clickedInsideMenu =
-        menu.contains(event.target);
-
-      const clickedButton =
-        button.contains(event.target);
-
-      if (
-        !clickedInsideMenu &&
-        !clickedButton &&
-        menu.classList.contains("open")
-      ) {
-
-        closeMenu();
-      }
-
-    }
-  );
-}
-
-
-// ============================================================
-// ESC KEY
-// ============================================================
-
-function setupEscapeKey() {
-
-  document.addEventListener(
-    "keydown",
-    function(event) {
-
-      if (event.key === "Escape") {
-
-        closeMenu();
-
-        document
-          .querySelectorAll(".modal.show")
-          .forEach(
-            function(modal) {
-
-              modal.classList.remove(
-                "show"
-              );
-
-            }
-          );
-      }
-
-    }
-  );
-}
-
-
-// ============================================================
-// AUTH STATE LISTENER
-// ============================================================
-
-function setupAuthListener() {
-
-  if (!supabaseClient) {
-    return;
-  }
-
-  supabaseClient.auth.onAuthStateChange(
-    function(event, session) {
-
-      console.log(
-        "Auth event:",
-        event
-      );
-
-      if (session) {
-
-        showApplication(
-          session.user
-        );
-
-      } else {
-
-        showAuthentication();
-      }
-
-    }
-  );
-}
-
-
-// ============================================================
-// INITIALIZE
-// ============================================================
-
-async function initializeApp() {
-
-  console.log(
-    "MoneyMind AI starting..."
-  );
-
-  if (!Array.isArray(transactions)) {
-    transactions = [];
-  }
-
-  if (!Array.isArray(goals)) {
-    goals = [];
-  }
-
-  if (!Array.isArray(investments)) {
-    investments = [];
-  }
-
-  setupModalClosing();
-
-  setupMenuClosing();
-
-  setupEscapeKey();
-
-  setupAuthListener();
-
-  updateDashboard();
-
-  renderTransactions();
-
-  renderGoals();
-
-  renderInvestments();
-
-  await checkAuth();
-
-  console.log(
-    "MoneyMind AI ready."
-  );
-}
-
-
-// ============================================================
-// IMPORTANT:
-// EXPOSE EVERY FUNCTION USED BY HTML
-// ============================================================
-
-window.loginUser =
-  loginUser;
-
-window.signupUser =
-  signupUser;
-
-window.showLogin =
-  showLogin;
-
-window.showSignup =
-  showSignup;
-
-window.toggleMenu =
-  toggleMenu;
-
-window.closeMenu =
-  closeMenu;
-
-window.showSection =
-  showSection;
-
-window.openTransactionModal =
-  openTransactionModal;
-
-window.addTransaction =
-  addTransaction;
-
-window.deleteTransaction =
-  deleteTransaction;
-
-window.openGoalModal =
-  openGoalModal;
-
-window.addGoal =
-  addGoal;
-
-window.deleteGoal =
-  deleteGoal;
-
-window.openInvestmentModal =
-  openInvestmentModal;
-
-window.addInvestment =
-  addInvestment;
-
-window.deleteInvestment =
-  deleteInvestment;
-
-window.askAI =
-  askAI;
-
-window.quickQuestion =
-  quickQuestion;
-
-window.closeModal =
-  closeModal;
-
-
-// ============================================================
-// START APP
-// ============================================================
-
-if (
-  document.readyState === "loading"
-) {
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    initializeApp
-  );
-
-} else {
-
-  initializeApp();
-}
-
-
-console.log(
-  "MoneyMind app.js loaded successfully."
-);
