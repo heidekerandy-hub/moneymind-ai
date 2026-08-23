@@ -622,7 +622,29 @@ function toggleMenu() {
     console.log("Menu opened.");
   }
 }
+function closeMenu() {
 
+  const menu =
+    document.getElementById("mobileMenu");
+
+  const button =
+    document.querySelector(".menu-btn");
+
+  if (!menu) {
+    return;
+  }
+
+  menu.classList.remove("open");
+
+  if (button) {
+    button.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+  }
+
+  console.log("Menu closed.");
+}
 // ======================================================
 // TRANSACTION MODAL
 // ======================================================
@@ -2413,38 +2435,29 @@ function setupEventListeners() {
 
   // CLOSE MENU WHEN CLICKING OUTSIDE
 
-  document.addEventListener(
-    "click",
-    event => {
+ function closeMenu() {
 
-      const menu =
-        document.getElementById(
-          "mobileMenu"
-        );
+  const menu =
+    document.getElementById("mobileMenu");
 
-      const menuButton =
-        document.getElementById(
-          "menuButton"
-        );
+  const button =
+    document.querySelector(".menu-btn");
 
-      if (
-        menu &&
-        menu.classList.contains(
-          "open"
-        ) &&
-        !menu.contains(event.target) &&
-        !menuButton.contains(event.target)
-      ) {
+  if (!menu) {
+    return;
+  }
 
-        closeMenu();
-      }
+  menu.classList.remove("open");
 
-    }
-  );
+  if (button) {
+    button.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+  }
 
+  console.log("Menu closed.");
 }
-
-
 // ======================================================
 // SUPABASE AUTH LISTENER
 // ======================================================
