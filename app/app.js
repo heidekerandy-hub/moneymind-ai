@@ -396,3 +396,27 @@ window.showLogin = function () {
 
 window.signupUser = signupUser;
 window.loginUser = loginUser;
+window.toggleMenu = toggleMenu;
+window.showSection = showSection;
+
+window.openTransactionModal = openTransactionModal;
+window.addTransaction = addTransaction;
+window.deleteTransaction = deleteTransaction;
+
+window.openGoalModal = openGoalModal;
+window.addGoal = addGoal;
+window.deleteGoal = deleteGoal;
+
+window.openInvestmentModal = openInvestmentModal;
+window.addInvestment = addInvestment;
+window.deleteInvestment = deleteInvestment;
+
+window.askAI = askAI;
+window.quickQuestion = quickQuestion;
+
+window.closeModal = closeModal;
+
+window.showSignup = showSignup;
+window.showLogin = showLogin;
+window.signupUser = signupUser;
+window.loginUser = loginUser;
