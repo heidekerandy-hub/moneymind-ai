@@ -1,50 +1,51 @@
-// ======================================================
-// MONEY MIND AI
-// COMPLETE WORKING APP.JS
-// ======================================================
+// =====================================================
+// MONEYMIND AI - COMPLETE APPLICATION
+// =====================================================
 
+// =====================================================
+// CONFIGURATION
+// =====================================================
 
-// ======================================================
-// SUPABASE
-// ======================================================
-
-const supabaseClient = window.supabaseClient || null;
+const supabaseClient = window.supabaseClient;
 
 const AI_URL =
   "https://pgbetpprhyrplrzxjzvb.supabase.co/functions/v1/smart-responder";
 
 
-// ======================================================
+// =====================================================
 // APPLICATION DATA
-// ======================================================
+// =====================================================
 
 let transactions = loadArray("mm_transactions");
 let goals = loadArray("mm_goals");
 let investments = loadArray("mm_investments");
 
 
-// ======================================================
-// SAFE ARRAY LOADER
-// ======================================================
+// =====================================================
+// LOCAL STORAGE
+// =====================================================
 
 function loadArray(key) {
 
   try {
 
-    const saved = localStorage.getItem(key);
+    const saved =
+      localStorage.getItem(key);
 
     if (!saved) {
       return [];
     }
 
-    const parsed = JSON.parse(saved);
+    const parsed =
+      JSON.parse(saved);
 
     if (Array.isArray(parsed)) {
       return parsed;
     }
 
     console.warn(
-      key + " is not an array. Resetting."
+      "Invalid stored data:",
+      key
     );
 
     localStorage.removeItem(key);
@@ -54,7 +55,8 @@ function loadArray(key) {
   } catch (error) {
 
     console.error(
-      "Could not load " + key,
+      "Storage error:",
+      key,
       error
     );
 
@@ -64,608 +66,31 @@ function loadArray(key) {
   }
 }
 
-
-// ======================================================
-// SAVE ALL DATA
-// ======================================================
 
 function saveData() {
 
-  try {
-
-    localStorage.setItem(
-      "mm_transactions",
-      JSON.stringify(transactions)
-    );
-
-    localStorage.setItem(
-      "mm_goals",
-      JSON.stringify(goals)
-    );
-
-    localStorage.setItem(
-      "mm_investments",
-      JSON.stringify(investments)
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Could not save MoneyMind data:",
-      error
-    );
-  }
-}
-
-
-// ======================================================
-// AUTHENTICATION
-// ======================================================
-
-async function checkAuth() {
-
-  const authScreen =
-    document.getElementById("authScreen");
-
-  if (!authScreen) {
-    return;
-  }
-
-  if (!supabaseClient) {
-
-    console.warn(
-      "Supabase client not found."
-    );
-
-    authScreen.style.display = "flex";
-
-    return;
-  }
-
-  try {
-
-    const result =
-      await supabaseClient.auth.getSession();
-
-    const session =
-      result.data
-        ? result.data.session
-        : null;
-
-    const error =
-      result.error;
-
-    if (error) {
-
-      console.error(
-        "Supabase session error:",
-        error
-      );
-
-      authScreen.style.display = "flex";
-
-      return;
-    }
-
-    if (session) {
-
-      authScreen.style.display = "none";
-
-      console.log(
-        "Logged in:",
-        session.user.email
-      );
-
-    } else {
-
-      authScreen.style.display = "flex";
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Authentication check failed:",
-      error
-    );
-
-    authScreen.style.display = "flex";
-  }
-}
-
-
-// ======================================================
-// SIGN UP
-// ======================================================
-
-async function signupUser() {
-
-  const emailInput =
-    document.getElementById("signupEmail");
-
-  const passwordInput =
-    document.getElementById("signupPassword");
-
-  const message =
-    document.getElementById("authMessage");
-
-  if (
-    !emailInput ||
-    !passwordInput ||
-    !message
-  ) {
-    console.error(
-      "Signup elements not found."
-    );
-
-    return;
-  }
-
-  const email =
-    emailInput.value.trim();
-
-  const password =
-    passwordInput.value;
-
-  if (!email || !password) {
-
-    message.textContent =
-      "Please enter your email and password.";
-
-    return;
-  }
-
-  if (password.length < 6) {
-
-    message.textContent =
-      "Password must be at least 6 characters.";
-
-    return;
-  }
-
-  if (!supabaseClient) {
-
-    message.textContent =
-      "Supabase authentication is unavailable.";
-
-    return;
-  }
-
-  message.textContent =
-    "Creating your account...";
-
-  try {
-
-    const result =
-      await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
-
-    const data =
-      result.data;
-
-    const error =
-      result.error;
-
-    if (error) {
-
-      console.error(
-        "Signup error:",
-        error
-      );
-
-      message.textContent =
-        error.message;
-
-      return;
-    }
-
-    if (data && data.session) {
-
-      message.textContent =
-        "Account created successfully.";
-
-      await checkAuth();
-
-    } else {
-
-      message.textContent =
-        "Account created. Please check your email to confirm your account.";
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Signup failed:",
-      error
-    );
-
-    message.textContent =
-      "Unable to create account. Please try again.";
-  }
-}
-
-
-// ======================================================
-// LOGIN
-// ======================================================
-
-async function loginUser() {
-
-  const emailInput =
-    document.getElementById("loginEmail");
-
-  const passwordInput =
-    document.getElementById("loginPassword");
-
-  const message =
-    document.getElementById("authMessage");
-
-  if (
-    !emailInput ||
-    !passwordInput ||
-    !message
-  ) {
-    console.error(
-      "Login elements not found."
-    );
-
-    return;
-  }
-
-  const email =
-    emailInput.value.trim();
-
-  const password =
-    passwordInput.value;
-
-  if (!email || !password) {
-
-    message.textContent =
-      "Please enter your email and password.";
-
-    return;
-  }
-
-  if (!supabaseClient) {
-
-    message.textContent =
-      "Supabase authentication is unavailable.";
-
-    return;
-  }
-
-  message.textContent =
-    "Logging in...";
-
-  try {
-
-    const result =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-    const data =
-      result.data;
-
-    const error =
-      result.error;
-
-    if (error) {
-
-      console.error(
-        "Login error:",
-        error
-      );
-
-      message.textContent =
-        error.message;
-
-      return;
-    }
-
-    console.log(
-      "Login successful:",
-      data && data.user
-        ? data.user.email
-        : ""
-    );
-
-    message.textContent =
-      "Login successful.";
-
-    const authScreen =
-      document.getElementById(
-        "authScreen"
-      );
-
-    if (authScreen) {
-
-      authScreen.style.display =
-        "none";
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Login failed:",
-      error
-    );
-
-    message.textContent =
-      "Unable to log in. Please try again.";
-  }
-}
-
-
-// ======================================================
-// LOGOUT
-// ======================================================
-
-async function logoutUser() {
-
-  if (!supabaseClient) {
-    return;
-  }
-
-  try {
-
-    const result =
-      await supabaseClient.auth.signOut();
-
-    if (result.error) {
-
-      console.error(
-        "Logout error:",
-        result.error
-      );
-
-      return;
-    }
-
-    console.log(
-      "Logged out successfully."
-    );
-
-    const authScreen =
-      document.getElementById(
-        "authScreen"
-      );
-
-    if (authScreen) {
-
-      authScreen.style.display =
-        "flex";
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Logout failed:",
-      error
-    );
-  }
-}
-
-
-// ======================================================
-// AUTH SCREEN SWITCHING
-// ======================================================
-
-function showSignup() {
-
-  const loginForm =
-    document.getElementById(
-      "loginForm"
-    );
-
-  const signupForm =
-    document.getElementById(
-      "signupForm"
-    );
-
-  const message =
-    document.getElementById(
-      "authMessage"
-    );
-
-  if (loginForm) {
-    loginForm.style.display = "none";
-  }
-
-  if (signupForm) {
-    signupForm.style.display = "block";
-  }
-
-  if (message) {
-    message.textContent = "";
-  }
-}
-
-
-function showLogin() {
-
-  const loginForm =
-    document.getElementById(
-      "loginForm"
-    );
-
-  const signupForm =
-    document.getElementById(
-      "signupForm"
-    );
-
-  const message =
-    document.getElementById(
-      "authMessage"
-    );
-
-  if (signupForm) {
-    signupForm.style.display = "none";
-  }
-
-  if (loginForm) {
-    loginForm.style.display = "block";
-  }
-
-  if (message) {
-    message.textContent = "";
-  }
-}
-
-
-// ======================================================
-// MOBILE MENU
-// ======================================================
-
-function toggleMenu() {
-
-  const menu =
-    document.getElementById(
-      "mobileMenu"
-    );
-
-  if (!menu) {
-
-    console.error(
-      "mobileMenu element not found."
-    );
-
-    return;
-  }
-
-  const isOpen =
-    menu.classList.contains(
-      "active"
-    );
-
-  if (isOpen) {
-
-    menu.classList.remove(
-      "active"
-    );
-
-    menu.style.display =
-      "none";
-
-    menu.setAttribute(
-      "aria-hidden",
-      "true"
-    );
-
-  } else {
-
-    menu.classList.add(
-      "active"
-    );
-
-    menu.style.display =
-      "flex";
-
-    menu.setAttribute(
-      "aria-hidden",
-      "false"
-    );
-  }
-}
-
-
-// ======================================================
-// CLOSE MOBILE MENU
-// ======================================================
-
-function closeMobileMenu() {
-
-  const menu =
-    document.getElementById(
-      "mobileMenu"
-    );
-
-  if (!menu) {
-    return;
-  }
-
-  menu.classList.remove(
-    "active"
+  localStorage.setItem(
+    "mm_transactions",
+    JSON.stringify(transactions)
   );
 
-  menu.style.display =
-    "none";
+  localStorage.setItem(
+    "mm_goals",
+    JSON.stringify(goals)
+  );
 
-  menu.setAttribute(
-    "aria-hidden",
-    "true"
+  localStorage.setItem(
+    "mm_investments",
+    JSON.stringify(investments)
   );
 }
 
 
-// ======================================================
-// NAVIGATION
-// ======================================================
-
-function showSection(sectionId) {
-
-  if (!sectionId) {
-    return;
-  }
-
-  const sections =
-    document.querySelectorAll(
-      ".section"
-    );
-
-  sections.forEach(
-    function(section) {
-
-      section.classList.remove(
-        "active"
-      );
-
-    }
-  );
-
-
-  const section =
-    document.getElementById(
-      sectionId
-    );
-
-
-  if (!section) {
-
-    console.error(
-      "Section not found:",
-      sectionId
-    );
-
-    return;
-  }
-
-
-  section.classList.add(
-    "active"
-  );
-
-
-  closeMobileMenu();
-
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
-
-
-// ======================================================
-// MONEY FORMAT
-// ======================================================
+// =====================================================
+// HELPERS
+// =====================================================
 
 function formatMoney(amount) {
-
-  const number =
-    Number(amount) || 0;
 
   return new Intl.NumberFormat(
     "en-NG",
@@ -674,13 +99,11 @@ function formatMoney(amount) {
       currency: "NGN",
       maximumFractionDigits: 0
     }
-  ).format(number);
+  ).format(
+    Number(amount) || 0
+  );
 }
 
-
-// ======================================================
-// DATE FORMAT
-// ======================================================
 
 function formatDate(date) {
 
@@ -706,66 +129,1239 @@ function formatDate(date) {
 }
 
 
-// ======================================================
-// HTML SECURITY
-// ======================================================
-
 function escapeHTML(value) {
 
   const div =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   div.textContent =
-    String(value === null || value === undefined
-      ? ""
-      : value
-    );
+    String(value ?? "");
 
   return div.innerHTML;
 }
 
 
-// ======================================================
-// DASHBOARD
-// ======================================================
-
-function calculateFinancials() {
+function ensureArrays() {
 
   if (!Array.isArray(transactions)) {
     transactions = [];
   }
 
-  let income = 0;
+  if (!Array.isArray(goals)) {
+    goals = [];
+  }
 
-  let expenses = 0;
+  if (!Array.isArray(investments)) {
+    investments = [];
+  }
+}
 
-  transactions.forEach(
-    function(transaction) {
 
-      const amount =
-        Number(
-          transaction.amount || 0
-        );
+// =====================================================
+// MENU
+// =====================================================
 
-      if (
-        transaction.type ===
-        "income"
-      ) {
+function toggleMenu() {
 
-        income += amount;
+  const menu =
+    document.getElementById("mobileMenu");
 
-      } else if (
-        transaction.type ===
-        "expense"
-      ) {
+  const button =
+    document.getElementById("menuButton");
 
-        expenses += amount;
+  if (!menu) {
+
+    console.error(
+      "MoneyMind: mobileMenu not found."
+    );
+
+    return;
+  }
+
+  const isOpen =
+    menu.classList.toggle("open");
+
+  menu.setAttribute(
+    "aria-hidden",
+    String(!isOpen)
+  );
+
+  if (button) {
+
+    button.setAttribute(
+      "aria-expanded",
+      String(isOpen)
+    );
+
+    button.textContent =
+      isOpen ? "✕" : "☰";
+  }
+
+  console.log(
+    "MoneyMind menu:",
+    isOpen ? "OPEN" : "CLOSED"
+  );
+}
+
+
+// =====================================================
+// NAVIGATION
+// =====================================================
+
+function showSection(sectionId) {
+
+  const section =
+    document.getElementById(sectionId);
+
+  if (!section) {
+
+    console.error(
+      "MoneyMind: section not found:",
+      sectionId
+    );
+
+    return;
+  }
+
+
+  document
+    .querySelectorAll(".section")
+    .forEach(function(item) {
+
+      item.classList.remove("active");
+
+    });
+
+
+  section.classList.add("active");
+
+
+  closeMenu();
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+
+  console.log(
+    "MoneyMind section:",
+    sectionId
+  );
+}
+
+
+function closeMenu() {
+
+  const menu =
+    document.getElementById("mobileMenu");
+
+  const button =
+    document.getElementById("menuButton");
+
+  if (menu) {
+
+    menu.classList.remove("open");
+
+    menu.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+  }
+
+  if (button) {
+
+    button.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+    button.textContent = "☰";
+  }
+}
+
+
+// =====================================================
+// AUTH
+// =====================================================
+
+async function checkAuth() {
+
+  const authScreen =
+    document.getElementById("authScreen");
+
+  if (!authScreen) {
+    return;
+  }
+
+
+  if (!supabaseClient) {
+
+    console.error(
+      "Supabase client unavailable."
+    );
+
+    authScreen.style.display =
+      "flex";
+
+    return;
+  }
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    if (data.session) {
+
+      authScreen.style.display =
+        "none";
+
+      console.log(
+        "Logged in:",
+        data.session.user.email
+      );
+
+    } else {
+
+      authScreen.style.display =
+        "flex";
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Authentication error:",
+      error
+    );
+
+    authScreen.style.display =
+      "flex";
+  }
+}
+
+
+// =====================================================
+// SIGNUP
+// =====================================================
+
+async function signupUser() {
+
+  const email =
+    document
+      .getElementById("signupEmail")
+      ?.value
+      .trim();
+
+  const password =
+    document
+      .getElementById("signupPassword")
+      ?.value;
+
+  const message =
+    document.getElementById(
+      "authMessage"
+    );
+
+
+  if (!message) {
+    return;
+  }
+
+
+  if (!email || !password) {
+
+    message.textContent =
+      "Please enter your email and password.";
+
+    return;
+  }
+
+
+  if (password.length < 6) {
+
+    message.textContent =
+      "Password must be at least 6 characters.";
+
+    return;
+  }
+
+
+  if (!supabaseClient) {
+
+    message.textContent =
+      "Supabase authentication is unavailable.";
+
+    return;
+  }
+
+
+  message.textContent =
+    "Creating your account...";
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.signUp({
+        email,
+        password
+      });
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    if (data.session) {
+
+      message.textContent =
+        "Account created successfully.";
+
+      await checkAuth();
+
+    } else {
+
+      message.textContent =
+        "Account created. Check your email to confirm your account.";
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Signup error:",
+      error
+    );
+
+    message.textContent =
+      error.message ||
+      "Unable to create account.";
+  }
+}
+
+
+// =====================================================
+// LOGIN
+// =====================================================
+
+async function loginUser() {
+
+  const email =
+    document
+      .getElementById("loginEmail")
+      ?.value
+      .trim();
+
+  const password =
+    document
+      .getElementById("loginPassword")
+      ?.value;
+
+  const message =
+    document.getElementById(
+      "authMessage"
+    );
+
+
+  if (!message) {
+    return;
+  }
+
+
+  if (!email || !password) {
+
+    message.textContent =
+      "Please enter your email and password.";
+
+    return;
+  }
+
+
+  if (!supabaseClient) {
+
+    message.textContent =
+      "Supabase authentication is unavailable.";
+
+    return;
+  }
+
+
+  message.textContent =
+    "Logging in...";
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    message.textContent =
+      "Login successful.";
+
+    console.log(
+      "Logged in:",
+      data.user?.email
+    );
+
+
+    await checkAuth();
+
+  } catch (error) {
+
+    console.error(
+      "Login error:",
+      error
+    );
+
+    message.textContent =
+      error.message ||
+      "Unable to log in.";
+  }
+}
+
+
+// =====================================================
+// LOGOUT
+// =====================================================
+
+async function logoutUser() {
+
+  if (!supabaseClient) {
+    return;
+  }
+
+
+  try {
+
+    const {
+      error
+    } =
+      await supabaseClient.auth.signOut();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    closeMenu();
+
+    console.log(
+      "MoneyMind logged out."
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Logout error:",
+      error
+    );
+  }
+}
+
+
+// =====================================================
+// AUTH FORMS
+// =====================================================
+
+function showSignup() {
+
+  document
+    .getElementById("loginForm")
+    ?.classList
+    .add("hidden");
+
+  document
+    .getElementById("signupForm")
+    ?.classList
+    .remove("hidden");
+
+  const message =
+    document.getElementById(
+      "authMessage"
+    );
+
+  if (message) {
+    message.textContent = "";
+  }
+}
+
+
+function showLogin() {
+
+  document
+    .getElementById("signupForm")
+    ?.classList
+    .add("hidden");
+
+  document
+    .getElementById("loginForm")
+    ?.classList
+    .remove("hidden");
+
+  const message =
+    document.getElementById(
+      "authMessage"
+    );
+
+  if (message) {
+    message.textContent = "";
+  }
+}
+
+
+// =====================================================
+// TRANSACTION MODAL
+// =====================================================
+
+function openTransactionModal() {
+
+  document
+    .getElementById("transactionModal")
+    ?.classList
+    .add("show");
+}
+
+
+// =====================================================
+// ADD TRANSACTION
+// =====================================================
+
+function addTransaction() {
+
+  ensureArrays();
+
+
+  const type =
+    document
+      .getElementById("transactionType")
+      ?.value ||
+    "expense";
+
+
+  const description =
+    document
+      .getElementById("transactionDescription")
+      ?.value
+      .trim();
+
+
+  const amount =
+    Number(
+      document
+        .getElementById("transactionAmount")
+        ?.value
+    );
+
+
+  const category =
+    document
+      .getElementById("transactionCategory")
+      ?.value ||
+    "Other";
+
+
+  if (
+    !description ||
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+
+    alert(
+      "Please enter a valid description and amount."
+    );
+
+    return;
+  }
+
+
+  transactions.unshift({
+
+    id:
+      Date.now(),
+
+    type:
+      type,
+
+    description:
+      description,
+
+    amount:
+      amount,
+
+    category:
+      category,
+
+    date:
+      new Date().toISOString()
+
+  });
+
+
+  saveData();
+
+
+  document
+    .getElementById("transactionDescription")
+    .value = "";
+
+  document
+    .getElementById("transactionAmount")
+    .value = "";
+
+
+  closeModal(
+    "transactionModal"
+  );
+
+
+  renderTransactions();
+
+  updateDashboard();
+}
+
+
+// =====================================================
+// DELETE TRANSACTION
+// =====================================================
+
+function deleteTransaction(id) {
+
+  if (
+    !confirm(
+      "Delete this transaction?"
+    )
+  ) {
+    return;
+  }
+
+
+  transactions =
+    transactions.filter(
+      function(transaction) {
+
+        return String(transaction.id) !==
+          String(id);
+
+      }
+    );
+
+
+  saveData();
+
+  renderTransactions();
+
+  updateDashboard();
+}
+
+
+// =====================================================
+// RENDER TRANSACTIONS
+// =====================================================
+
+function transactionHTML(transaction, showDelete) {
+
+  const sign =
+    transaction.type === "income"
+      ? "+"
+      : "-";
+
+
+  return `
+    <div class="transaction">
+
+      <div class="transaction-info">
+
+        <strong>
+          ${escapeHTML(
+            transaction.description
+          )}
+        </strong>
+
+        <small>
+          ${escapeHTML(
+            transaction.category || "Other"
+          )}
+          •
+          ${formatDate(transaction.date)}
+        </small>
+
+      </div>
+
+      <div class="${transaction.type}">
+        ${sign}
+        ${formatMoney(transaction.amount)}
+      </div>
+
+      ${
+        showDelete
+          ? `
+            <button
+              type="button"
+              class="delete-btn"
+              data-delete-transaction="${transaction.id}"
+            >
+              Delete
+            </button>
+          `
+          : ""
       }
 
-    }
+    </div>
+  `;
+}
+
+
+function renderTransactions() {
+
+  const container =
+    document.getElementById(
+      "allTransactions"
+    );
+
+
+  if (!container) {
+    return;
+  }
+
+
+  if (transactions.length === 0) {
+
+    container.innerHTML =
+      '<p class="empty">No transactions yet.</p>';
+
+    return;
+  }
+
+
+  container.innerHTML =
+    transactions
+      .map(function(transaction) {
+
+        return transactionHTML(
+          transaction,
+          true
+        );
+
+      })
+      .join("");
+}
+
+
+function renderRecentTransactions() {
+
+  const container =
+    document.getElementById(
+      "recentTransactions"
+    );
+
+
+  if (!container) {
+    return;
+  }
+
+
+  const recent =
+    transactions.slice(0, 5);
+
+
+  if (recent.length === 0) {
+
+    container.innerHTML =
+      '<p class="empty">No transactions yet.</p>';
+
+    return;
+  }
+
+
+  container.innerHTML =
+    recent
+      .map(function(transaction) {
+
+        return transactionHTML(
+          transaction,
+          false
+        );
+
+      })
+      .join("");
+}
+
+
+// =====================================================
+// GOALS
+// =====================================================
+
+function openGoalModal() {
+
+  document
+    .getElementById("goalModal")
+    ?.classList
+    .add("show");
+}
+
+
+function addGoal() {
+
+  ensureArrays();
+
+
+  const name =
+    document
+      .getElementById("goalName")
+      ?.value
+      .trim();
+
+
+  const target =
+    Number(
+      document
+        .getElementById("goalTarget")
+        ?.value
+    );
+
+
+  const saved =
+    Number(
+      document
+        .getElementById("goalSaved")
+        ?.value
+    ) || 0;
+
+
+  if (
+    !name ||
+    !Number.isFinite(target) ||
+    target <= 0
+  ) {
+
+    alert(
+      "Please enter a valid goal name and target."
+    );
+
+    return;
+  }
+
+
+  goals.push({
+
+    id:
+      Date.now(),
+
+    name:
+      name,
+
+    target:
+      target,
+
+    saved:
+      Math.max(0, saved)
+
+  });
+
+
+  saveData();
+
+
+  document.getElementById("goalName").value = "";
+  document.getElementById("goalTarget").value = "";
+  document.getElementById("goalSaved").value = "";
+
+
+  closeModal("goalModal");
+
+  renderGoals();
+
+  updateDashboard();
+}
+
+
+function deleteGoal(id) {
+
+  if (
+    !confirm(
+      "Delete this savings goal?"
+    )
+  ) {
+    return;
+  }
+
+
+  goals =
+    goals.filter(
+      function(goal) {
+
+        return String(goal.id) !==
+          String(id);
+
+      }
+    );
+
+
+  saveData();
+
+  renderGoals();
+
+  updateDashboard();
+}
+
+
+function renderGoals() {
+
+  const container =
+    document.getElementById(
+      "goalsList"
+    );
+
+
+  if (!container) {
+    return;
+  }
+
+
+  if (goals.length === 0) {
+
+    container.innerHTML =
+      '<p class="empty">No savings goals yet.</p>';
+
+    return;
+  }
+
+
+  container.innerHTML =
+    goals
+      .map(function(goal) {
+
+        const target =
+          Number(goal.target) || 0;
+
+        const saved =
+          Number(goal.saved) || 0;
+
+
+        const percentage =
+          target > 0
+            ? Math.min(
+                100,
+                Math.round(
+                  saved / target * 100
+                )
+              )
+            : 0;
+
+
+        return `
+          <div class="goal">
+
+            <h3>
+              ${escapeHTML(goal.name)}
+            </h3>
+
+            <p>
+              ${formatMoney(saved)}
+              saved of
+              ${formatMoney(target)}
+            </p>
+
+            <div class="progress">
+
+              <div
+                class="progress-bar"
+                style="width:${percentage}%"
+              ></div>
+
+            </div>
+
+            <strong>
+              ${percentage}% complete
+            </strong>
+
+            <br><br>
+
+            <button
+              type="button"
+              class="delete-btn"
+              data-delete-goal="${goal.id}"
+            >
+              Delete
+            </button>
+
+          </div>
+        `;
+
+      })
+      .join("");
+}
+
+
+// =====================================================
+// INVESTMENTS
+// =====================================================
+
+function openInvestmentModal() {
+
+  document
+    .getElementById("investmentModal")
+    ?.classList
+    .add("show");
+}
+
+
+function addInvestment() {
+
+  ensureArrays();
+
+
+  const name =
+    document
+      .getElementById("investmentName")
+      ?.value
+      .trim();
+
+
+  const amount =
+    Number(
+      document
+        .getElementById("investmentAmount")
+        ?.value
+    );
+
+
+  const value =
+    Number(
+      document
+        .getElementById("investmentValue")
+        ?.value
+    );
+
+
+  if (
+    !name ||
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+
+    alert(
+      "Please enter a valid investment name and amount."
+    );
+
+    return;
+  }
+
+
+  investments.push({
+
+    id:
+      Date.now(),
+
+    name:
+      name,
+
+    amount:
+      amount,
+
+    value:
+      Number.isFinite(value) &&
+      value >= 0
+        ? value
+        : amount
+
+  });
+
+
+  saveData();
+
+
+  document.getElementById("investmentName").value = "";
+  document.getElementById("investmentAmount").value = "";
+  document.getElementById("investmentValue").value = "";
+
+
+  closeModal(
+    "investmentModal"
   );
+
+
+  renderInvestments();
+
+  updateDashboard();
+}
+
+
+function deleteInvestment(id) {
+
+  if (
+    !confirm(
+      "Delete this investment?"
+    )
+  ) {
+    return;
+  }
+
+
+  investments =
+    investments.filter(
+      function(investment) {
+
+        return String(investment.id) !==
+          String(id);
+
+      }
+    );
+
+
+  saveData();
+
+  renderInvestments();
+
+  updateDashboard();
+}
+
+
+function renderInvestments() {
+
+  const container =
+    document.getElementById(
+      "investmentsList"
+    );
+
+
+  if (!container) {
+    return;
+  }
+
+
+  if (investments.length === 0) {
+
+    container.innerHTML =
+      '<p class="empty">No investments recorded yet.</p>';
+
+    return;
+  }
+
+
+  container.innerHTML =
+    investments
+      .map(function(investment) {
+
+        const invested =
+          Number(investment.amount) || 0;
+
+        const value =
+          Number(investment.value) || 0;
+
+        const gain =
+          value - invested;
+
+
+        return `
+          <div class="investment">
+
+            <h3>
+              ${escapeHTML(investment.name)}
+            </h3>
+
+            <p>
+              Invested:
+              ${formatMoney(invested)}
+            </p>
+
+            <p>
+              Current value:
+              ${formatMoney(value)}
+            </p>
+
+            <strong class="${
+              gain >= 0
+                ? "income"
+                : "expense"
+            }">
+              ${gain >= 0 ? "+" : ""}
+              ${formatMoney(gain)}
+            </strong>
+
+            <br><br>
+
+            <button
+              type="button"
+              class="delete-btn"
+              data-delete-investment="${investment.id}"
+            >
+              Delete
+            </button>
+
+          </div>
+        `;
+
+      })
+      .join("");
+}
+
+
+// =====================================================
+// FINANCIAL CALCULATIONS
+// =====================================================
+
+function calculateFinancialSnapshot() {
+
+  ensureArrays();
+
+
+  const income =
+    transactions
+      .filter(function(transaction) {
+
+        return transaction.type === "income";
+
+      })
+      .reduce(function(sum, transaction) {
+
+        return sum +
+          Number(transaction.amount) || 0;
+
+      }, 0);
+
+
+  const expenses =
+    transactions
+      .filter(function(transaction) {
+
+        return transaction.type === "expense";
+
+      })
+      .reduce(function(sum, transaction) {
+
+        return sum +
+          Number(transaction.amount) || 0;
+
+      }, 0);
 
 
   const balance =
@@ -774,28 +1370,83 @@ function calculateFinancials() {
 
   const savingsRate =
     income > 0
-      ? (balance / income) * 100
+      ? balance / income * 100
       : 0;
+
+
+  const invested =
+    investments
+      .reduce(function(sum, investment) {
+
+        return sum +
+          (Number(investment.amount) || 0);
+
+      }, 0);
+
+
+  const investmentValue =
+    investments
+      .reduce(function(sum, investment) {
+
+        return sum +
+          (Number(investment.value) || 0);
+
+      }, 0);
+
+
+  const investmentGain =
+    investmentValue - invested;
 
 
   return {
 
-    income: income,
+    income,
 
-    expenses: expenses,
+    expenses,
 
-    balance: balance,
+    balance,
 
-    savingsRate: savingsRate
+    savingsRate:
+      Number(
+        savingsRate.toFixed(1)
+      ),
+
+    invested,
+
+    investmentValue,
+
+    investmentGain,
+
+    transactionCount:
+      transactions.length,
+
+    goalCount:
+      goals.length,
+
+    investmentCount:
+      investments.length,
+
+    goals:
+      goals,
+
+    transactions:
+      transactions,
+
+    investments:
+      investments
 
   };
 }
 
 
+// =====================================================
+// DASHBOARD
+// =====================================================
+
 function updateDashboard() {
 
-  const financials =
-    calculateFinancials();
+  const snapshot =
+    calculateFinancialSnapshot();
 
 
   const incomeElement =
@@ -813,37 +1464,66 @@ function updateDashboard() {
       "balance"
     );
 
+  const investmentElement =
+    document.getElementById(
+      "totalInvestments"
+    );
+
+  const savingsRateElement =
+    document.getElementById(
+      "savingsRate"
+    );
+
+  const investmentGainElement =
+    document.getElementById(
+      "investmentGain"
+    );
+
+  const goalCountElement =
+    document.getElementById(
+      "goalCount"
+    );
+
 
   if (incomeElement) {
-
     incomeElement.textContent =
-      formatMoney(
-        financials.income
-      );
+      formatMoney(snapshot.income);
   }
-
 
   if (expenseElement) {
-
     expenseElement.textContent =
-      formatMoney(
-        financials.expenses
-      );
+      formatMoney(snapshot.expenses);
   }
 
-
   if (balanceElement) {
-
     balanceElement.textContent =
-      formatMoney(
-        financials.balance
-      );
+      formatMoney(snapshot.balance);
+  }
+
+  if (investmentElement) {
+    investmentElement.textContent =
+      formatMoney(snapshot.investmentValue);
+  }
+
+  if (savingsRateElement) {
+    savingsRateElement.textContent =
+      snapshot.savingsRate + "%";
+  }
+
+  if (investmentGainElement) {
+    investmentGainElement.textContent =
+      formatMoney(snapshot.investmentGain);
+  }
+
+  if (goalCountElement) {
+    goalCountElement.textContent =
+      snapshot.goalCount;
   }
 
 
   updateHealth(
-    financials.income,
-    financials.expenses
+    snapshot.income,
+    snapshot.expenses
   );
 
 
@@ -851,9 +1531,9 @@ function updateDashboard() {
 }
 
 
-// ======================================================
+// =====================================================
 // FINANCIAL HEALTH
-// ======================================================
+// =====================================================
 
 function updateHealth(
   income,
@@ -865,23 +1545,25 @@ function updateHealth(
 
   if (income > 0) {
 
-    const savingsRate =
-      ((income - expenses) / income) * 100;
+    const rate =
+      (income - expenses) /
+      income *
+      100;
 
 
-    if (savingsRate >= 30) {
+    if (rate >= 30) {
 
       score = 100;
 
-    } else if (savingsRate >= 20) {
+    } else if (rate >= 20) {
 
       score = 85;
 
-    } else if (savingsRate >= 10) {
+    } else if (rate >= 10) {
 
       score = 70;
 
-    } else if (savingsRate >= 0) {
+    } else if (rate >= 0) {
 
       score = 50;
 
@@ -926,7 +1608,7 @@ function updateHealth(
       "Excellent financial health";
 
     message.textContent =
-      "You're maintaining a strong savings position.";
+      "Your current savings position is strong.";
 
   } else if (score >= 70) {
 
@@ -934,7 +1616,7 @@ function updateHealth(
       "Good financial health";
 
     message.textContent =
-      "You're doing well. Look for opportunities to increase savings.";
+      "You're building a reasonable financial position.";
 
   } else if (score >= 50) {
 
@@ -950,7 +1632,7 @@ function updateHealth(
       "Warning";
 
     message.textContent =
-      "Your spending may be higher than your income.";
+      "Your current expenses are higher than your income.";
 
   } else {
 
@@ -963,190 +1645,18 @@ function updateHealth(
 }
 
 
-// ======================================================
-// TRANSACTION MODAL
-// ======================================================
-
-function openTransactionModal() {
-
-  const modal =
-    document.getElementById(
-      "transactionModal"
-    );
-
-  if (modal) {
-
-    modal.classList.add(
-      "show"
-    );
-  }
-}
-
-
-// ======================================================
-// ADD TRANSACTION
-// ======================================================
-
-function addTransaction() {
-
-  const type =
-    document.getElementById(
-      "transactionType"
-    )?.value || "expense";
-
-
-  const description =
-    document.getElementById(
-      "transactionDescription"
-    )?.value.trim() || "";
-
-
-  const amount =
-    Number(
-      document.getElementById(
-        "transactionAmount"
-      )?.value
-    );
-
-
-  const category =
-    document.getElementById(
-      "transactionCategory"
-    )?.value || "Other";
-
-
-  if (
-    !description ||
-    !amount ||
-    amount <= 0
-  ) {
-
-    alert(
-      "Please enter a description and a valid amount."
-    );
-
-    return;
-  }
-
-
-  if (!Array.isArray(transactions)) {
-    transactions = [];
-  }
-
-
-  transactions.unshift({
-
-    id:
-      Date.now(),
-
-    type:
-      type,
-
-    description:
-      description,
-
-    amount:
-      amount,
-
-    category:
-      category,
-
-    date:
-      new Date().toISOString()
-
-  });
-
-
-  saveData();
-
-
-  const descriptionInput =
-    document.getElementById(
-      "transactionDescription"
-    );
-
-  const amountInput =
-    document.getElementById(
-      "transactionAmount"
-    );
-
-
-  if (descriptionInput) {
-
-    descriptionInput.value =
-      "";
-  }
-
-
-  if (amountInput) {
-
-    amountInput.value =
-      "";
-  }
-
-
-  closeModal(
-    "transactionModal"
-  );
-
-
-  renderTransactions();
-
-  updateDashboard();
-}
-
-
-// ======================================================
-// DELETE TRANSACTION
-// ======================================================
-
-function deleteTransaction(id) {
-
-  const confirmed =
-    confirm(
-      "Are you sure you want to delete this transaction?"
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  if (!Array.isArray(transactions)) {
-    transactions = [];
-  }
-
-
-  transactions =
-    transactions.filter(
-      function(transaction) {
-
-        return String(
-          transaction.id
-        ) !== String(id);
-
-      }
-    );
-
-
-  saveData();
-
-  renderTransactions();
-
-  updateDashboard();
-}
-
-
-// ======================================================
-// RENDER TRANSACTIONS
-// ======================================================
-
-function renderTransactions() {
+// =====================================================
+// AI CHAT
+// =====================================================
+
+function addChatMessage(
+  message,
+  type
+) {
 
   const container =
     document.getElementById(
-      "allTransactions"
+      "chatMessages"
     );
 
 
@@ -1155,787 +1665,81 @@ function renderTransactions() {
   }
 
 
-  if (
-    !Array.isArray(transactions) ||
-    transactions.length === 0
-  ) {
+  const div =
+    document.createElement("div");
 
-    container.innerHTML =
-      '<p class="empty">No transactions yet.</p>';
 
+  div.className =
+    "message " + type;
+
+
+  div.textContent =
+    message;
+
+
+  container.appendChild(div);
+
+
+  container.scrollTop =
+    container.scrollHeight;
+}
+
+
+// =====================================================
+// PERSONALIZED AI SUMMARY
+// =====================================================
+
+function updateAISummary(snapshot) {
+
+  const element =
+    document.getElementById(
+      "personalizedSummary"
+    );
+
+
+  if (!element) {
     return;
   }
 
 
-  container.innerHTML =
-    transactions
-      .map(
-        function(transaction) {
-
-          const sign =
-            transaction.type ===
-            "income"
-              ? "+"
-              : "-";
+  let status;
 
 
-          const type =
-            transaction.type ===
-            "income"
-              ? "income"
-              : "expense";
+  if (snapshot.income <= 0) {
+
+    status =
+      "I need your income and expense information before I can provide a detailed personal analysis.";
+
+  } else if (snapshot.savingsRate >= 20) {
+
+    status =
+      `Your current savings rate is ${snapshot.savingsRate}%. You are currently saving ${formatMoney(snapshot.balance)} based on the transactions recorded.`;
+
+  } else if (snapshot.balance >= 0) {
+
+    status =
+      `You currently have ${formatMoney(snapshot.balance)} left after recorded expenses. Your savings rate is ${snapshot.savingsRate}%, so there may be room to improve your monthly savings.`;
+
+  } else {
+
+    status =
+      `Your recorded expenses exceed your income by ${formatMoney(Math.abs(snapshot.balance))}. Reducing expenses should be a priority.`;
+  }
 
 
-          return `
-            <div class="transaction">
+  element.innerHTML = `
+    <strong>Your personalized financial analysis</strong>
 
-              <div class="transaction-info">
-
-                <strong>
-                  ${escapeHTML(
-                    transaction.description
-                  )}
-                </strong>
-
-                <small>
-                  ${escapeHTML(
-                    transaction.category ||
-                    "Other"
-                  )}
-
-                  •
-
-                  ${formatDate(
-                    transaction.date
-                  )}
-                </small>
-
-              </div>
-
-              <div class="${type}">
-                ${sign}
-                ${formatMoney(
-                  transaction.amount
-                )}
-              </div>
-
-              <button
-                type="button"
-                class="delete-btn"
-                onclick="window.deleteTransaction('${String(transaction.id)}')"
-              >
-                Delete
-              </button>
-
-            </div>
-          `;
-
-        }
-      )
-      .join("");
+    <p>
+      ${escapeHTML(status)}
+    </p>
+  `;
 }
 
 
-// ======================================================
-// RECENT TRANSACTIONS
-// ======================================================
-
-function renderRecentTransactions() {
-
-  const container =
-    document.getElementById(
-      "recentTransactions"
-    );
-
-
-  if (!container) {
-    return;
-  }
-
-
-  const recent =
-    Array.isArray(transactions)
-      ? transactions.slice(0, 5)
-      : [];
-
-
-  if (recent.length === 0) {
-
-    container.innerHTML =
-      '<p class="empty">No transactions yet.</p>';
-
-    return;
-  }
-
-
-  container.innerHTML =
-    recent
-      .map(
-        function(transaction) {
-
-          const sign =
-            transaction.type ===
-            "income"
-              ? "+"
-              : "-";
-
-
-          const type =
-            transaction.type ===
-            "income"
-              ? "income"
-              : "expense";
-
-
-          return `
-            <div class="transaction">
-
-              <div class="transaction-info">
-
-                <strong>
-                  ${escapeHTML(
-                    transaction.description
-                  )}
-                </strong>
-
-                <small>
-                  ${escapeHTML(
-                    transaction.category ||
-                    "Other"
-                  )}
-
-                  •
-
-                  ${formatDate(
-                    transaction.date
-                  )}
-                </small>
-
-              </div>
-
-              <div class="${type}">
-                ${sign}
-                ${formatMoney(
-                  transaction.amount
-                )}
-              </div>
-
-            </div>
-          `;
-
-        }
-      )
-      .join("");
-}
-
-
-// ======================================================
-// SAVINGS GOALS
-// ======================================================
-
-function openGoalModal() {
-
-  const modal =
-    document.getElementById(
-      "goalModal"
-    );
-
-  if (modal) {
-
-    modal.classList.add(
-      "show"
-    );
-  }
-}
-
-
-function addGoal() {
-
-  const name =
-    document.getElementById(
-      "goalName"
-    )?.value.trim() || "";
-
-
-  const target =
-    Number(
-      document.getElementById(
-        "goalTarget"
-      )?.value
-    );
-
-
-  const saved =
-    Number(
-      document.getElementById(
-        "goalSaved"
-      )?.value
-    ) || 0;
-
-
-  if (
-    !name ||
-    !target ||
-    target <= 0
-  ) {
-
-    alert(
-      "Please enter a goal name and target amount."
-    );
-
-    return;
-  }
-
-
-  if (!Array.isArray(goals)) {
-    goals = [];
-  }
-
-
-  goals.push({
-
-    id:
-      Date.now(),
-
-    name:
-      name,
-
-    target:
-      target,
-
-    saved:
-      Math.max(
-        0,
-        saved
-      )
-
-  });
-
-
-  saveData();
-
-
-  const nameInput =
-    document.getElementById(
-      "goalName"
-    );
-
-  const targetInput =
-    document.getElementById(
-      "goalTarget"
-    );
-
-  const savedInput =
-    document.getElementById(
-      "goalSaved"
-    );
-
-
-  if (nameInput) {
-    nameInput.value = "";
-  }
-
-  if (targetInput) {
-    targetInput.value = "";
-  }
-
-  if (savedInput) {
-    savedInput.value = "";
-  }
-
-
-  closeModal(
-    "goalModal"
-  );
-
-
-  renderGoals();
-}
-
-
-function deleteGoal(id) {
-
-  if (
-    !confirm(
-      "Are you sure you want to delete this savings goal?"
-    )
-  ) {
-    return;
-  }
-
-
-  if (!Array.isArray(goals)) {
-    goals = [];
-  }
-
-
-  goals =
-    goals.filter(
-      function(goal) {
-
-        return String(
-          goal.id
-        ) !== String(id);
-
-      }
-    );
-
-
-  saveData();
-
-  renderGoals();
-}
-
-
-function renderGoals() {
-
-  const container =
-    document.getElementById(
-      "goalsList"
-    );
-
-
-  if (!container) {
-    return;
-  }
-
-
-  if (
-    !Array.isArray(goals) ||
-    goals.length === 0
-  ) {
-
-    container.innerHTML =
-      '<p class="empty">No savings goals yet.</p>';
-
-    return;
-  }
-
-
-  container.innerHTML =
-    goals
-      .map(
-        function(goal) {
-
-          const target =
-            Number(
-              goal.target
-            ) || 0;
-
-
-          const saved =
-            Number(
-              goal.saved
-            ) || 0;
-
-
-          let percentage = 0;
-
-
-          if (target > 0) {
-
-            percentage =
-              Math.min(
-                100,
-                Math.round(
-                  (saved / target) * 100
-                )
-              );
-          }
-
-
-          return `
-            <div class="goal">
-
-              <h3>
-                ${escapeHTML(
-                  goal.name
-                )}
-              </h3>
-
-              <p>
-                ${formatMoney(saved)}
-                saved of
-                ${formatMoney(target)}
-              </p>
-
-              <div class="progress">
-
-                <div
-                  class="progress-bar"
-                  style="width:${percentage}%"
-                ></div>
-
-              </div>
-
-              <strong>
-                ${percentage}% complete
-              </strong>
-
-              <br><br>
-
-              <button
-                type="button"
-                class="delete-btn"
-                onclick="window.deleteGoal('${String(goal.id)}')"
-              >
-                Delete
-              </button>
-
-            </div>
-          `;
-
-        }
-      )
-      .join("");
-}
-
-
-// ======================================================
-// INVESTMENTS
-// ======================================================
-
-function openInvestmentModal() {
-
-  const modal =
-    document.getElementById(
-      "investmentModal"
-    );
-
-
-  if (modal) {
-
-    modal.classList.add(
-      "show"
-    );
-  }
-}
-
-
-function addInvestment() {
-
-  const name =
-    document.getElementById(
-      "investmentName"
-    )?.value.trim() || "";
-
-
-  const amount =
-    Number(
-      document.getElementById(
-        "investmentAmount"
-      )?.value
-    );
-
-
-  const value =
-    Number(
-      document.getElementById(
-        "investmentValue"
-      )?.value
-    );
-
-
-  if (
-    !name ||
-    !amount ||
-    amount <= 0
-  ) {
-
-    alert(
-      "Please enter the investment name and amount."
-    );
-
-    return;
-  }
-
-
-  if (!Array.isArray(investments)) {
-    investments = [];
-  }
-
-
-  investments.push({
-
-    id:
-      Date.now(),
-
-    name:
-      name,
-
-    amount:
-      amount,
-
-    value:
-      value > 0
-        ? value
-        : amount
-
-  });
-
-
-  saveData();
-
-
-  const nameInput =
-    document.getElementById(
-      "investmentName"
-    );
-
-  const amountInput =
-    document.getElementById(
-      "investmentAmount"
-    );
-
-  const valueInput =
-    document.getElementById(
-      "investmentValue"
-    );
-
-
-  if (nameInput) {
-    nameInput.value = "";
-  }
-
-  if (amountInput) {
-    amountInput.value = "";
-  }
-
-  if (valueInput) {
-    valueInput.value = "";
-  }
-
-
-  closeModal(
-    "investmentModal"
-  );
-
-
-  renderInvestments();
-}
-
-
-function deleteInvestment(id) {
-
-  if (
-    !confirm(
-      "Are you sure you want to delete this investment?"
-    )
-  ) {
-    return;
-  }
-
-
-  if (!Array.isArray(investments)) {
-    investments = [];
-  }
-
-
-  investments =
-    investments.filter(
-      function(investment) {
-
-        return String(
-          investment.id
-        ) !== String(id);
-
-      }
-    );
-
-
-  saveData();
-
-  renderInvestments();
-}
-
-
-function renderInvestments() {
-
-  const container =
-    document.getElementById(
-      "investmentsList"
-    );
-
-
-  if (!container) {
-    return;
-  }
-
-
-  if (
-    !Array.isArray(investments) ||
-    investments.length === 0
-  ) {
-
-    container.innerHTML =
-      '<p class="empty">No investments recorded yet.</p>';
-
-    return;
-  }
-
-
-  container.innerHTML =
-    investments
-      .map(
-        function(investment) {
-
-          const invested =
-            Number(
-              investment.amount
-            ) || 0;
-
-
-          const value =
-            Number(
-              investment.value
-            ) || 0;
-
-
-          const gain =
-            value - invested;
-
-
-          const gainClass =
-            gain >= 0
-              ? "income"
-              : "expense";
-
-
-          const gainSign =
-            gain >= 0
-              ? "+"
-              : "";
-
-
-          return `
-            <div class="investment">
-
-              <h3>
-                ${escapeHTML(
-                  investment.name
-                )}
-              </h3>
-
-              <p>
-                Invested:
-                ${formatMoney(
-                  invested
-                )}
-              </p>
-
-              <p>
-                Current value:
-                ${formatMoney(
-                  value
-                )}
-              </p>
-
-              <strong class="${gainClass}">
-                ${gainSign}
-                ${formatMoney(gain)}
-              </strong>
-
-              <br><br>
-
-              <button
-                type="button"
-                class="delete-btn"
-                onclick="window.deleteInvestment('${String(investment.id)}')"
-              >
-                Delete
-              </button>
-
-            </div>
-          `;
-
-        }
-      )
-      .join("");
-}
-
-
-// ======================================================
-// FINANCIAL SNAPSHOT FOR AI
-// ======================================================
-
-function createFinancialSnapshot() {
-
-  const financials =
-    calculateFinancials();
-
-
-  let invested = 0;
-
-  let investmentValue = 0;
-
-
-  if (!Array.isArray(investments)) {
-    investments = [];
-  }
-
-
-  investments.forEach(
-    function(investment) {
-
-      invested +=
-        Number(
-          investment.amount || 0
-        );
-
-      investmentValue +=
-        Number(
-          investment.value || 0
-        );
-
-    }
-  );
-
-
-  const investmentGain =
-    investmentValue - invested;
-
-
-  return {
-
-    income:
-      financials.income,
-
-    expenses:
-      financials.expenses,
-
-    balance:
-      financials.balance,
-
-    savingsRate:
-      Number(
-        financials.savingsRate.toFixed(1)
-      ),
-
-    totalInvested:
-      invested,
-
-    investmentValue:
-      investmentValue,
-
-    investmentGain:
-      investmentGain,
-
-    savingsGoals:
-      goals,
-
-    transactions:
-      transactions,
-
-    investments:
-      investments
-
-  };
-}
-
-
-// ======================================================
-// AI ASSISTANT
-// ======================================================
+// =====================================================
+// ASK AI
+// =====================================================
 
 async function askAI() {
 
@@ -1953,7 +1757,7 @@ async function askAI() {
   if (!input || !chat) {
 
     console.error(
-      "AI input or chat container not found."
+      "AI interface not found."
     );
 
     return;
@@ -1969,24 +1773,17 @@ async function askAI() {
   }
 
 
-  // USER MESSAGE
-
   addChatMessage(
     question,
     "user"
   );
 
 
-  input.value =
-    "";
+  input.value = "";
 
-
-  // THINKING MESSAGE
 
   const thinking =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
 
   thinking.className =
@@ -2006,29 +1803,11 @@ async function askAI() {
     chat.scrollHeight;
 
 
-  // SAFETY
-
-  if (!Array.isArray(transactions)) {
-    transactions = [];
-  }
-
-  if (!Array.isArray(goals)) {
-    goals = [];
-  }
-
-  if (!Array.isArray(investments)) {
-    investments = [];
-  }
-
-
-  // FINANCIAL SNAPSHOT
-
   const financialSnapshot =
-    createFinancialSnapshot();
+    calculateFinancialSnapshot();
 
 
-  console.log(
-    "Personalized financial snapshot:",
+  updateAISummary(
     financialSnapshot
   );
 
@@ -2036,7 +1815,7 @@ async function askAI() {
   if (!AI_URL) {
 
     thinking.textContent =
-      "MoneyMind AI is not configured.";
+      "AI service is not configured.";
 
     return;
   }
@@ -2053,7 +1832,7 @@ async function askAI() {
         controller.abort();
 
       },
-      20000
+      25000
     );
 
 
@@ -2063,7 +1842,8 @@ async function askAI() {
       await fetch(
         AI_URL,
         {
-          method: "POST",
+          method:
+            "POST",
 
           headers: {
             "Content-Type":
@@ -2083,14 +1863,11 @@ async function askAI() {
 
           signal:
             controller.signal
-
         }
       );
 
 
-    clearTimeout(
-      timeout
-    );
+    clearTimeout(timeout);
 
 
     let data = {};
@@ -2104,10 +1881,8 @@ async function askAI() {
     } catch (error) {
 
       console.warn(
-        "AI response was not valid JSON.",
-        error
+        "AI response was not JSON."
       );
-
     }
 
 
@@ -2127,21 +1902,15 @@ async function askAI() {
     }
 
 
-    const reply =
+    thinking.textContent =
       data.reply ||
       data.message ||
-      "I couldn't generate a response.";
-
-
-    thinking.textContent =
-      reply;
+      "MoneyMind AI did not return an answer.";
 
 
   } catch (error) {
 
-    clearTimeout(
-      timeout
-    );
+    clearTimeout(timeout);
 
 
     console.error(
@@ -2156,14 +1925,13 @@ async function askAI() {
     ) {
 
       thinking.textContent =
-        "MoneyMind AI is taking too long to respond. Please try again.";
+        "MoneyMind AI took too long to respond. Please try again.";
 
     } else {
 
       thinking.textContent =
         "MoneyMind AI could not connect right now. Please try again.";
     }
-
   }
 
 
@@ -2172,9 +1940,9 @@ async function askAI() {
 }
 
 
-// ======================================================
-// QUICK AI QUESTIONS
-// ======================================================
+// =====================================================
+// QUICK QUESTIONS
+// =====================================================
 
 function quickQuestion(question) {
 
@@ -2197,60 +1965,14 @@ function quickQuestion(question) {
 }
 
 
-// ======================================================
-// ADD CHAT MESSAGE
-// ======================================================
-
-function addChatMessage(
-  message,
-  type
-) {
-
-  const container =
-    document.getElementById(
-      "chatMessages"
-    );
-
-
-  if (!container) {
-    return;
-  }
-
-
-  const div =
-    document.createElement(
-      "div"
-    );
-
-
-  div.className =
-    "message " + type;
-
-
-  div.textContent =
-    message;
-
-
-  container.appendChild(
-    div
-  );
-
-
-  container.scrollTop =
-    container.scrollHeight;
-}
-
-
-// ======================================================
+// =====================================================
 // MODALS
-// ======================================================
+// =====================================================
 
 function closeModal(id) {
 
   const modal =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
 
   if (modal) {
@@ -2262,81 +1984,278 @@ function closeModal(id) {
 }
 
 
-// ======================================================
-// CLICK OUTSIDE MODAL
-// ======================================================
+// =====================================================
+// EVENT LISTENERS
+// =====================================================
 
-window.addEventListener(
-  "click",
-  function(event) {
+function setupEventListeners() {
 
-    const modals =
-      document.querySelectorAll(
-        ".modal"
-      );
+  // MENU
 
-
-    modals.forEach(
-      function(modal) {
-
-        if (
-          event.target ===
-          modal
-        ) {
-
-          modal.classList.remove(
-            "show"
-          );
-        }
-
-      }
+  const menuButton =
+    document.getElementById(
+      "menuButton"
     );
 
+
+  if (menuButton) {
+
+    menuButton.addEventListener(
+      "click",
+      toggleMenu
+    );
   }
-);
 
 
-// ======================================================
-// ENTER KEY FOR AI
-// ======================================================
+  // NAVIGATION
 
-document.addEventListener(
-  "keydown",
-  function(event) {
+  document
+    .querySelectorAll(
+      "#mobileMenu [data-section]"
+    )
+    .forEach(function(button) {
 
-    if (
-      event.key ===
-      "Enter"
-    ) {
+      button.addEventListener(
+        "click",
+        function() {
 
-      const active =
-        document.activeElement;
+          showSection(
+            button.dataset.section
+          );
+
+        }
+      );
+
+    });
 
 
-      if (
-        active &&
-        active.id ===
-        "aiInput"
-      ) {
+  // LOGOUT
 
-        if (!event.shiftKey) {
+  const logoutButton =
+    document.getElementById(
+      "logoutButton"
+    );
+
+
+  if (logoutButton) {
+
+    logoutButton.addEventListener(
+      "click",
+      logoutUser
+    );
+  }
+
+
+  // QUICK QUESTIONS
+
+  document
+    .querySelectorAll(
+      "[data-question]"
+    )
+    .forEach(function(button) {
+
+      button.addEventListener(
+        "click",
+        function() {
+
+          quickQuestion(
+            button.dataset.question
+          );
+
+        }
+      );
+
+    });
+
+
+  // ENTER KEY FOR AI
+
+  const aiInput =
+    document.getElementById(
+      "aiInput"
+    );
+
+
+  if (aiInput) {
+
+    aiInput.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (
+          event.key ===
+          "Enter"
+        ) {
 
           event.preventDefault();
 
           askAI();
         }
+
       }
-    }
-
+    );
   }
-);
 
 
-// ======================================================
-// SUPABASE AUTH STATE
-// ======================================================
+  // DELETE TRANSACTIONS
 
-if (supabaseClient) {
+  document.addEventListener(
+    "click",
+    function(event) {
+
+      const transactionButton =
+        event.target.closest(
+          "[data-delete-transaction]"
+        );
+
+
+      if (transactionButton) {
+
+        deleteTransaction(
+          transactionButton.dataset
+            .deleteTransaction
+        );
+
+        return;
+      }
+
+
+      const goalButton =
+        event.target.closest(
+          "[data-delete-goal]"
+        );
+
+
+      if (goalButton) {
+
+        deleteGoal(
+          goalButton.dataset
+            .deleteGoal
+        );
+
+        return;
+      }
+
+
+      const investmentButton =
+        event.target.closest(
+          "[data-delete-investment]"
+        );
+
+
+      if (investmentButton) {
+
+        deleteInvestment(
+          investmentButton.dataset
+            .deleteInvestment
+        );
+
+      }
+
+    }
+  );
+
+
+  // CLOSE MENU WHEN CLICKING OUTSIDE
+
+  document.addEventListener(
+    "click",
+    function(event) {
+
+      const menu =
+        document.getElementById(
+          "mobileMenu"
+        );
+
+      const button =
+        document.getElementById(
+          "menuButton"
+        );
+
+
+      if (
+        !menu ||
+        !button
+      ) {
+        return;
+      }
+
+
+      if (
+        !menu.contains(event.target) &&
+        !button.contains(event.target)
+      ) {
+
+        closeMenu();
+
+      }
+
+    }
+  );
+
+
+  // CLOSE MODALS
+
+  document.addEventListener(
+    "click",
+    function(event) {
+
+      if (
+        event.target.classList.contains(
+          "modal"
+        )
+      ) {
+
+        event.target.classList.remove(
+          "show"
+        );
+      }
+
+    }
+  );
+
+
+  // ESCAPE KEY
+
+  document.addEventListener(
+    "keydown",
+    function(event) {
+
+      if (
+        event.key ===
+        "Escape"
+      ) {
+
+        closeMenu();
+
+
+        document
+          .querySelectorAll(".modal.show")
+          .forEach(function(modal) {
+
+            modal.classList.remove(
+              "show"
+            );
+
+          });
+
+      }
+
+    }
+  );
+}
+
+
+// =====================================================
+// AUTH STATE
+// =====================================================
+
+function setupAuthListener() {
+
+  if (!supabaseClient) {
+    return;
+  }
+
 
   supabaseClient.auth.onAuthStateChange(
     function(event, session) {
@@ -2374,9 +2293,9 @@ if (supabaseClient) {
 }
 
 
-// ======================================================
-// INITIALIZE APPLICATION
-// ======================================================
+// =====================================================
+// INITIALIZE
+// =====================================================
 
 async function initializeApp() {
 
@@ -2385,27 +2304,17 @@ async function initializeApp() {
   );
 
 
-  // Guarantee valid arrays
-
-  if (!Array.isArray(transactions)) {
-    transactions = [];
-  }
-
-  if (!Array.isArray(goals)) {
-    goals = [];
-  }
-
-  if (!Array.isArray(investments)) {
-    investments = [];
-  }
+  ensureArrays();
 
 
-  // Authentication
+  setupEventListeners();
+
+
+  setupAuthListener();
+
 
   await checkAuth();
 
-
-  // Render application
 
   updateDashboard();
 
@@ -2416,9 +2325,9 @@ async function initializeApp() {
   renderInvestments();
 
 
-  // Make sure menu starts closed
-
-  closeMobileMenu();
+  updateAISummary(
+    calculateFinancialSnapshot()
+  );
 
 
   console.log(
@@ -2427,9 +2336,15 @@ async function initializeApp() {
 }
 
 
-// ======================================================
-// EXPOSE FUNCTIONS TO HTML
-// ======================================================
+// =====================================================
+// EXPOSE PUBLIC FUNCTIONS
+// =====================================================
+
+window.toggleMenu =
+  toggleMenu;
+
+window.showSection =
+  showSection;
 
 window.showSignup =
   showSignup;
@@ -2445,15 +2360,6 @@ window.loginUser =
 
 window.logoutUser =
   logoutUser;
-
-window.showSection =
-  showSection;
-
-window.toggleMenu =
-  toggleMenu;
-
-window.closeMobileMenu =
-  closeMobileMenu;
 
 window.openTransactionModal =
   openTransactionModal;
@@ -2492,9 +2398,9 @@ window.closeModal =
   closeModal;
 
 
-// ======================================================
-// START APPLICATION
-// ======================================================
+// =====================================================
+// START
+// =====================================================
 
 if (
   document.readyState ===
@@ -2509,12 +2415,9 @@ if (
 } else {
 
   initializeApp();
+
 }
 
-
-// ======================================================
-// FINAL DEBUG MESSAGE
-// ======================================================
 
 console.log(
   "MoneyMind app.js loaded successfully."
