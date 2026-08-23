@@ -1,21 +1,39 @@
-```javascript
 // ======================================================
-// MONEY MIND AI - COMPLETE APP.JS
+// MONEY MIND AI
+// COMPLETE APPLICATION JAVASCRIPT
 // ======================================================
+
+"use strict";
 
 
 // ======================================================
-// CONFIGURATION
+// SUPABASE
 // ======================================================
 
-const supabaseClient = window.supabaseClient || null;
+const supabaseClient =
+  window.supabaseClient || null;
+
 
 const AI_URL =
   "https://pgbetpprhyrplrzxjzvb.supabase.co/functions/v1/smart-responder";
 
 
 // ======================================================
-// DATA STORAGE
+// DATA
+// ======================================================
+
+let transactions =
+  loadArray("mm_transactions");
+
+let goals =
+  loadArray("mm_goals");
+
+let investments =
+  loadArray("mm_investments");
+
+
+// ======================================================
+// STORAGE
 // ======================================================
 
 function loadArray(key) {
@@ -36,10 +54,6 @@ function loadArray(key) {
       return parsed;
     }
 
-    console.warn(
-      key + " contains invalid data. Resetting."
-    );
-
     localStorage.removeItem(key);
 
     return [];
@@ -47,7 +61,8 @@ function loadArray(key) {
   } catch (error) {
 
     console.error(
-      "Error loading " + key + ":",
+      "Storage error:",
+      key,
       error
     );
 
@@ -57,167 +72,129 @@ function loadArray(key) {
   }
 }
 
-
-let transactions =
-  loadArray("mm_transactions");
-
-let goals =
-  loadArray("mm_goals");
-
-let investments =
-  loadArray("mm_investments");
-
-
-// ======================================================
-// SAVE DATA
-// ======================================================
 
 function saveData() {
 
-  try {
+  localStorage.setItem(
+    "mm_transactions",
+    JSON.stringify(transactions)
+  );
 
-    localStorage.setItem(
-      "mm_transactions",
-      JSON.stringify(transactions)
-    );
+  localStorage.setItem(
+    "mm_goals",
+    JSON.stringify(goals)
+  );
 
-    localStorage.setItem(
-      "mm_goals",
-      JSON.stringify(goals)
-    );
-
-    localStorage.setItem(
-      "mm_investments",
-      JSON.stringify(investments)
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Error saving data:",
-      error
-    );
-  }
-}
-
-
-// ======================================================
-// HELPERS
-// ======================================================
-
-function formatMoney(amount) {
-
-  const number =
-    Number(amount) || 0;
-
-  return new Intl.NumberFormat(
-    "en-NG",
-    {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 0
-    }
-  ).format(number);
-}
-
-
-function formatDate(date) {
-
-  const parsed =
-    new Date(date);
-
-  if (
-    Number.isNaN(parsed.getTime())
-  ) {
-    return "";
-  }
-
-  return parsed.toLocaleDateString(
-    "en-NG",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    }
+  localStorage.setItem(
+    "mm_investments",
+    JSON.stringify(investments)
   );
 }
 
 
-function escapeHTML(value) {
+// ======================================================
+// AUTH MESSAGE
+// ======================================================
 
-  const div =
-    document.createElement("div");
+function showAuthMessage(message) {
 
-  div.textContent =
-    String(value ?? "");
+  const element =
+    document.getElementById(
+      "authMessage"
+    );
 
-  return div.innerHTML;
-}
-
-
-function getElement(id) {
-
-  return document.getElementById(id);
+  if (element) {
+    element.textContent =
+      message || "";
+  }
 }
 
 
 // ======================================================
-// AUTHENTICATION DISPLAY
+// SHOW AUTH
+// ======================================================
+
+function showAuthentication() {
+
+  const authScreen =
+    document.getElementById(
+      "authScreen"
+    );
+
+  const app =
+    document.getElementById(
+      "app"
+    );
+
+  if (authScreen) {
+    authScreen.classList.remove("hidden");
+  }
+
+  if (app) {
+    app.classList.add("hidden");
+  }
+}
+
+
+// ======================================================
+// SHOW APPLICATION
 // ======================================================
 
 function showApplication(user) {
 
   const authScreen =
-    getElement("authScreen");
+    document.getElementById(
+      "authScreen"
+    );
+
+  const app =
+    document.getElementById(
+      "app"
+    );
 
   if (authScreen) {
-    authScreen.style.display = "none";
+    authScreen.classList.add("hidden");
   }
 
-  console.log(
-    "Logged in:",
-    user?.email || "Unknown user"
-  );
-}
-
-
-function showAuthentication() {
-
-  const authScreen =
-    getElement("authScreen");
-
-  if (authScreen) {
-    authScreen.style.display = "flex";
+  if (app) {
+    app.classList.remove("hidden");
   }
-}
 
+  const userEmail =
+    document.getElementById(
+      "userEmail"
+    );
 
-function showAuthMessage(message) {
+  if (userEmail) {
 
-  const messageElement =
-    getElement("authMessage");
-
-  if (messageElement) {
-    messageElement.textContent =
-      message;
+    userEmail.textContent =
+      user?.email || "";
   }
+
+  updateDashboard();
+
+  renderTransactions();
+
+  renderGoals();
+
+  renderInvestments();
 }
 
 
 // ======================================================
-// CHECK AUTHENTICATION
+// AUTH CHECK
 // ======================================================
 
 async function checkAuth() {
-
-  console.log(
-    "Checking authentication..."
-  );
 
   if (!supabaseClient) {
 
     console.error(
       "Supabase client not found."
+    );
+
+    showAuthMessage(
+      "Authentication service unavailable."
     );
 
     showAuthentication();
@@ -237,10 +214,12 @@ async function checkAuth() {
       throw error;
     }
 
-    if (
-      data.session &&
-      data.session.user
-    ) {
+    if (data.session) {
+
+      console.log(
+        "Logged in:",
+        data.session.user.email
+      );
 
       showApplication(
         data.session.user
@@ -264,119 +243,21 @@ async function checkAuth() {
 
 
 // ======================================================
-// SIGN UP
-// ======================================================
-
-async function signupUser() {
-
-  const email =
-    getElement("signupEmail")
-      ?.value
-      .trim();
-
-  const password =
-    getElement("signupPassword")
-      ?.value;
-
-
-  if (!email || !password) {
-
-    showAuthMessage(
-      "Please enter your email and password."
-    );
-
-    return;
-  }
-
-
-  if (password.length < 6) {
-
-    showAuthMessage(
-      "Password must be at least 6 characters."
-    );
-
-    return;
-  }
-
-
-  if (!supabaseClient) {
-
-    showAuthMessage(
-      "Authentication service unavailable."
-    );
-
-    return;
-  }
-
-
-  showAuthMessage(
-    "Creating your account..."
-  );
-
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
-
-
-    if (error) {
-      throw error;
-    }
-
-
-    if (data.session) {
-
-      showAuthMessage(
-        "Account created successfully."
-      );
-
-      showApplication(
-        data.user
-      );
-
-    } else {
-
-      showAuthMessage(
-        "Account created. Please check your email to confirm your account."
-      );
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Signup error:",
-      error
-    );
-
-    showAuthMessage(
-      error.message ||
-      "Unable to create account."
-    );
-  }
-}
-
-
-// ======================================================
 // LOGIN
 // ======================================================
 
 async function loginUser() {
 
   const email =
-    getElement("loginEmail")
+    document
+      .getElementById("loginEmail")
       ?.value
       .trim();
 
   const password =
-    getElement("loginPassword")
-      ?.value;
+    document
+      .getElementById("loginPassword")
+      ?.value || "";
 
 
   if (!email || !password) {
@@ -411,8 +292,8 @@ async function loginUser() {
       error
     } =
       await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
+        email,
+        password
       });
 
 
@@ -421,28 +302,21 @@ async function loginUser() {
     }
 
 
-    if (
-      data.session &&
+    console.log(
+      "Login successful:",
+      data.user?.email
+    );
+
+
+    showAuthMessage(
+      "Login successful."
+    );
+
+
+    showApplication(
       data.user
-    ) {
+    );
 
-      showAuthMessage("");
-
-      console.log(
-        "Login successful:",
-        data.user.email
-      );
-
-      showApplication(
-        data.user
-      );
-
-    } else {
-
-      showAuthMessage(
-        "Login succeeded, but no session was created."
-      );
-    }
 
   } catch (error) {
 
@@ -453,32 +327,179 @@ async function loginUser() {
 
     showAuthMessage(
       error.message ||
-      "Unable to log in."
+      "Unable to login."
     );
   }
 }
 
 
 // ======================================================
-// AUTH FORM SWITCHING
+// SIGNUP
+// ======================================================
+
+async function signupUser() {
+
+  const email =
+    document
+      .getElementById("signupEmail")
+      ?.value
+      .trim();
+
+  const password =
+    document
+      .getElementById("signupPassword")
+      ?.value || "";
+
+
+  if (!email || !password) {
+
+    showAuthMessage(
+      "Please enter your email and password."
+    );
+
+    return;
+  }
+
+
+  if (password.length < 6) {
+
+    showAuthMessage(
+      "Password must be at least 6 characters."
+    );
+
+    return;
+  }
+
+
+  if (!supabaseClient) {
+
+    showAuthMessage(
+      "Authentication service unavailable."
+    );
+
+    return;
+  }
+
+
+  showAuthMessage(
+    "Creating account..."
+  );
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.signUp({
+        email,
+        password
+      });
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    if (data.session) {
+
+      showApplication(
+        data.user
+      );
+
+      showAuthMessage(
+        "Account created successfully."
+      );
+
+    } else {
+
+      showAuthMessage(
+        "Account created. Check your email to confirm your account."
+      );
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "Signup error:",
+      error
+    );
+
+    showAuthMessage(
+      error.message ||
+      "Unable to create account."
+    );
+  }
+}
+
+
+// ======================================================
+// LOGOUT
+// ======================================================
+
+async function logoutUser() {
+
+  if (!supabaseClient) {
+    return;
+  }
+
+
+  try {
+
+    const {
+      error
+    } =
+      await supabaseClient.auth.signOut();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    closeMenu();
+
+    showAuthentication();
+
+
+  } catch (error) {
+
+    console.error(
+      "Logout error:",
+      error
+    );
+  }
+}
+
+
+// ======================================================
+// AUTH FORMS
 // ======================================================
 
 function showSignup() {
 
   const loginForm =
-    getElement("loginForm");
+    document.getElementById(
+      "loginForm"
+    );
 
   const signupForm =
-    getElement("signupForm");
+    document.getElementById(
+      "signupForm"
+    );
 
 
   if (loginForm) {
-    loginForm.style.display = "none";
+    loginForm.classList.add("hidden");
   }
 
   if (signupForm) {
-    signupForm.style.display = "block";
+    signupForm.classList.remove("hidden");
   }
+
 
   showAuthMessage("");
 }
@@ -487,82 +508,44 @@ function showSignup() {
 function showLogin() {
 
   const loginForm =
-    getElement("loginForm");
+    document.getElementById(
+      "loginForm"
+    );
 
   const signupForm =
-    getElement("signupForm");
+    document.getElementById(
+      "signupForm"
+    );
 
 
   if (signupForm) {
-    signupForm.style.display = "none";
+    signupForm.classList.add("hidden");
   }
 
   if (loginForm) {
-    loginForm.style.display = "block";
+    loginForm.classList.remove("hidden");
   }
+
 
   showAuthMessage("");
 }
 
 
 // ======================================================
-// NAVIGATION
-// ======================================================
-
-function showSection(sectionId) {
-
-  const sections =
-    document.querySelectorAll(".section");
-
-  sections.forEach(function(section) {
-
-    section.classList.remove(
-      "active"
-    );
-  });
-
-
-  const targetSection =
-    getElement(sectionId);
-
-
-  if (!targetSection) {
-
-    console.error(
-      "Section not found:",
-      sectionId
-    );
-
-    return;
-  }
-
-
-  targetSection.classList.add(
-    "active"
-  );
-
-
-  closeMenu();
-
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
-
-
-// ======================================================
-// MOBILE MENU
+// MENU
 // ======================================================
 
 function toggleMenu() {
 
   const menu =
-    getElement("mobileMenu");
+    document.getElementById(
+      "mobileMenu"
+    );
 
   const button =
-    document.querySelector(".menu-btn");
+    document.getElementById(
+      "menuButton"
+    );
 
 
   if (!menu) {
@@ -575,41 +558,48 @@ function toggleMenu() {
   }
 
 
-  menu.classList.toggle(
-    "open"
-  );
-
-
   const isOpen =
-    menu.classList.contains(
-      "open"
-    );
+    menu.classList.contains("open");
 
 
-  if (button) {
+  if (isOpen) {
 
-    button.setAttribute(
-      "aria-expanded",
-      String(isOpen)
+    closeMenu();
+
+  } else {
+
+    menu.classList.add("open");
+
+    if (button) {
+
+      button.setAttribute(
+        "aria-expanded",
+        "true"
+      );
+    }
+
+    console.log(
+      "Menu opened."
     );
   }
-
-
-  console.log(
-    isOpen
-      ? "Menu opened."
-      : "Menu closed."
-  );
 }
 
+
+// ======================================================
+// CLOSE MENU
+// ======================================================
 
 function closeMenu() {
 
   const menu =
-    getElement("mobileMenu");
+    document.getElementById(
+      "mobileMenu"
+    );
 
   const button =
-    document.querySelector(".menu-btn");
+    document.getElementById(
+      "menuButton"
+    );
 
 
   if (menu) {
@@ -631,10 +621,206 @@ function closeMenu() {
 
 
 // ======================================================
+// NAVIGATION
+// ======================================================
+
+function showSection(sectionId) {
+
+  const sections =
+    document.querySelectorAll(
+      ".section"
+    );
+
+
+  let found = false;
+
+
+  sections.forEach(
+    function(section) {
+
+      if (
+        section.id === sectionId
+      ) {
+
+        section.classList.add(
+          "active"
+        );
+
+        found = true;
+
+      } else {
+
+        section.classList.remove(
+          "active"
+        );
+      }
+
+    }
+  );
+
+
+  if (!found) {
+
+    console.error(
+      "Section not found:",
+      sectionId
+    );
+
+    return;
+  }
+
+
+  const navItems =
+    document.querySelectorAll(
+      ".nav-item[data-section]"
+    );
+
+
+  navItems.forEach(
+    function(item) {
+
+      if (
+        item.dataset.section ===
+        sectionId
+      ) {
+
+        item.classList.add(
+          "active"
+        );
+
+      } else {
+
+        item.classList.remove(
+          "active"
+        );
+      }
+
+    }
+  );
+
+
+  closeMenu();
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+
+// ======================================================
+// CLICK OUTSIDE MENU
+// ======================================================
+
+document.addEventListener(
+  "click",
+  function(event) {
+
+    const menu =
+      document.getElementById(
+        "mobileMenu"
+      );
+
+    const button =
+      document.getElementById(
+        "menuButton"
+      );
+
+
+    if (!menu || !button) {
+      return;
+    }
+
+
+    if (
+      menu.classList.contains("open") &&
+      !menu.contains(event.target) &&
+      !button.contains(event.target)
+    ) {
+
+      closeMenu();
+    }
+
+  }
+);
+
+
+// ======================================================
+// MONEY FORMAT
+// ======================================================
+
+function formatMoney(amount) {
+
+  const number =
+    Number(amount) || 0;
+
+
+  return new Intl.NumberFormat(
+    "en-NG",
+    {
+      style: "currency",
+      currency: "NGN",
+      maximumFractionDigits: 0
+    }
+  ).format(number);
+}
+
+
+// ======================================================
+// DATE FORMAT
+// ======================================================
+
+function formatDate(date) {
+
+  const parsed =
+    new Date(date);
+
+
+  if (
+    Number.isNaN(
+      parsed.getTime()
+    )
+  ) {
+
+    return "";
+  }
+
+
+  return parsed.toLocaleDateString(
+    "en-NG",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    }
+  );
+}
+
+
+// ======================================================
+// HTML SECURITY
+// ======================================================
+
+function escapeHTML(value) {
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+  div.textContent =
+    String(value ?? "");
+
+  return div.innerHTML;
+}
+
+
+// ======================================================
 // DASHBOARD
 // ======================================================
 
-function calculateFinancialSummary() {
+function calculateFinancials() {
 
   if (!Array.isArray(transactions)) {
     transactions = [];
@@ -643,87 +829,115 @@ function calculateFinancialSummary() {
 
   const income =
     transactions
-      .filter(function(transaction) {
-
-        return transaction.type === "income";
-
-      })
-      .reduce(function(sum, transaction) {
-
-        return sum +
-          (Number(transaction.amount) || 0);
-
-      }, 0);
+      .filter(
+        transaction =>
+          transaction.type ===
+          "income"
+      )
+      .reduce(
+        (sum, transaction) =>
+          sum +
+          Number(
+            transaction.amount || 0
+          ),
+        0
+      );
 
 
   const expenses =
     transactions
-      .filter(function(transaction) {
+      .filter(
+        transaction =>
+          transaction.type ===
+          "expense"
+      )
+      .reduce(
+        (sum, transaction) =>
+          sum +
+          Number(
+            transaction.amount || 0
+          ),
+        0
+      );
 
-        return transaction.type === "expense";
 
-      })
-      .reduce(function(sum, transaction) {
+  const balance =
+    income - expenses;
 
-        return sum +
-          (Number(transaction.amount) || 0);
 
-      }, 0);
+  const savingsRate =
+    income > 0
+      ? (balance / income) * 100
+      : 0;
 
 
   return {
-
-    income: income,
-
-    expenses: expenses,
-
-    balance:
-      income - expenses
+    income,
+    expenses,
+    balance,
+    savingsRate
   };
 }
 
 
+// ======================================================
+// UPDATE DASHBOARD
+// ======================================================
+
 function updateDashboard() {
 
-  const summary =
-    calculateFinancialSummary();
+  const financials =
+    calculateFinancials();
 
 
   const incomeElement =
-    getElement("totalIncome");
+    document.getElementById(
+      "totalIncome"
+    );
 
   const expenseElement =
-    getElement("totalExpenses");
+    document.getElementById(
+      "totalExpenses"
+    );
 
   const balanceElement =
-    getElement("balance");
+    document.getElementById(
+      "balance"
+    );
 
 
   if (incomeElement) {
 
     incomeElement.textContent =
-      formatMoney(summary.income);
+      formatMoney(
+        financials.income
+      );
   }
 
 
   if (expenseElement) {
 
     expenseElement.textContent =
-      formatMoney(summary.expenses);
+      formatMoney(
+        financials.expenses
+      );
   }
 
 
   if (balanceElement) {
 
     balanceElement.textContent =
-      formatMoney(summary.balance);
+      formatMoney(
+        financials.balance
+      );
   }
 
 
   updateHealth(
-    summary.income,
-    summary.expenses
+    financials.income,
+    financials.expenses
   );
+
 
   renderRecentTransactions();
 }
@@ -744,7 +958,9 @@ function updateHealth(
   if (income > 0) {
 
     const savingsRate =
-      ((income - expenses) / income) * 100;
+      ((income - expenses) /
+        income) *
+      100;
 
 
     if (savingsRate >= 30) {
@@ -771,13 +987,19 @@ function updateHealth(
 
 
   const scoreElement =
-    getElement("healthScore");
+    document.getElementById(
+      "healthScore"
+    );
 
-  const titleElement =
-    getElement("healthTitle");
+  const title =
+    document.getElementById(
+      "healthTitle"
+    );
 
-  const messageElement =
-    getElement("healthMessage");
+  const message =
+    document.getElementById(
+      "healthMessage"
+    );
 
 
   if (scoreElement) {
@@ -787,49 +1009,49 @@ function updateHealth(
   }
 
 
-  if (!titleElement || !messageElement) {
+  if (!title || !message) {
     return;
   }
 
 
   if (score >= 85) {
 
-    titleElement.textContent =
+    title.textContent =
       "Excellent financial health";
 
-    messageElement.textContent =
+    message.textContent =
       "You're maintaining a strong savings position.";
 
   } else if (score >= 70) {
 
-    titleElement.textContent =
+    title.textContent =
       "Good financial health";
 
-    messageElement.textContent =
+    message.textContent =
       "You're doing well. Look for opportunities to increase savings.";
 
   } else if (score >= 50) {
 
-    titleElement.textContent =
+    title.textContent =
       "Needs attention";
 
-    messageElement.textContent =
+    message.textContent =
       "Your expenses are taking a significant portion of your income.";
 
-  } else if (income > 0) {
+  } else if (score > 0) {
 
-    titleElement.textContent =
+    title.textContent =
       "Warning";
 
-    messageElement.textContent =
-      "Your expenses are higher than your income.";
+    message.textContent =
+      "Your spending may be higher than your income.";
 
   } else {
 
-    titleElement.textContent =
+    title.textContent =
       "Let's get started";
 
-    messageElement.textContent =
+    message.textContent =
       "Add your income and expenses to see your financial health.";
   }
 }
@@ -842,7 +1064,10 @@ function updateHealth(
 function openTransactionModal() {
 
   const modal =
-    getElement("transactionModal");
+    document.getElementById(
+      "transactionModal"
+    );
+
 
   if (modal) {
 
@@ -860,23 +1085,33 @@ function openTransactionModal() {
 function addTransaction() {
 
   const type =
-    getElement("transactionType")
-      ?.value || "expense";
+    document.getElementById(
+      "transactionType"
+    )?.value ||
+    "expense";
+
 
   const description =
-    getElement("transactionDescription")
-      ?.value
-      .trim();
+    document.getElementById(
+      "transactionDescription"
+    )?.value
+    .trim() ||
+    "";
+
 
   const amount =
     Number(
-      getElement("transactionAmount")
-        ?.value
+      document.getElementById(
+        "transactionAmount"
+      )?.value
     );
 
+
   const category =
-    getElement("transactionCategory")
-      ?.value || "Other";
+    document.getElementById(
+      "transactionCategory"
+    )?.value ||
+    "Other";
 
 
   if (
@@ -886,7 +1121,7 @@ function addTransaction() {
   ) {
 
     alert(
-      "Please enter a description and a valid amount."
+      "Please enter a description and valid amount."
     );
 
     return;
@@ -895,29 +1130,39 @@ function addTransaction() {
 
   transactions.unshift({
 
-    id: Date.now(),
+    id:
+      Date.now(),
 
-    type: type,
+    type,
 
-    description: description,
+    description,
 
-    amount: amount,
+    amount,
 
-    category: category,
+    category,
 
     date:
       new Date().toISOString()
+
   });
 
 
   saveData();
 
+  closeModal(
+    "transactionModal"
+  );
+
 
   const descriptionInput =
-    getElement("transactionDescription");
+    document.getElementById(
+      "transactionDescription"
+    );
 
   const amountInput =
-    getElement("transactionAmount");
+    document.getElementById(
+      "transactionAmount"
+    );
 
 
   if (descriptionInput) {
@@ -928,10 +1173,6 @@ function addTransaction() {
     amountInput.value = "";
   }
 
-
-  closeModal(
-    "transactionModal"
-  );
 
   renderTransactions();
 
@@ -947,7 +1188,7 @@ function deleteTransaction(id) {
 
   if (
     !confirm(
-      "Are you sure you want to delete this transaction?"
+      "Delete this transaction?"
     )
   ) {
     return;
@@ -956,12 +1197,9 @@ function deleteTransaction(id) {
 
   transactions =
     transactions.filter(
-      function(transaction) {
-
-        return String(transaction.id) !==
-          String(id);
-
-      }
+      transaction =>
+        String(transaction.id) !==
+        String(id)
     );
 
 
@@ -980,7 +1218,9 @@ function deleteTransaction(id) {
 function renderTransactions() {
 
   const container =
-    getElement("allTransactions");
+    document.getElementById(
+      "allTransactions"
+    );
 
 
   if (!container) {
@@ -989,7 +1229,6 @@ function renderTransactions() {
 
 
   if (
-    !Array.isArray(transactions) ||
     transactions.length === 0
   ) {
 
@@ -1002,46 +1241,68 @@ function renderTransactions() {
 
   container.innerHTML =
     transactions
-      .map(function(transaction) {
+      .map(
+        transaction => {
 
-        const sign =
-          transaction.type === "income"
-            ? "+"
-            : "-";
+          const sign =
+            transaction.type ===
+            "income"
+              ? "+"
+              : "-";
 
 
-        return `
-          <div class="transaction">
+          const className =
+            transaction.type ===
+            "income"
+              ? "income"
+              : "expense";
 
-            <div class="transaction-info">
 
-              <strong>
-                ${escapeHTML(transaction.description)}
-              </strong>
+          return `
 
-              <small>
-                ${escapeHTML(transaction.category || "Other")}
-                •
-                ${formatDate(transaction.date)}
-              </small>
+            <div class="transaction">
+
+              <div class="transaction-info">
+
+                <strong>
+                  ${escapeHTML(
+                    transaction.description
+                  )}
+                </strong>
+
+                <small>
+                  ${escapeHTML(
+                    transaction.category ||
+                    "Other"
+                  )}
+                  •
+                  ${formatDate(
+                    transaction.date
+                  )}
+                </small>
+
+              </div>
+
+              <div class="${className}">
+                ${sign}
+                ${formatMoney(
+                  transaction.amount
+                )}
+              </div>
+
+              <button
+                type="button"
+                class="delete-btn"
+                onclick="window.deleteTransaction(${transaction.id})"
+              >
+                Delete
+              </button>
 
             </div>
 
-            <div class="${transaction.type}">
-              ${sign}${formatMoney(transaction.amount)}
-            </div>
-
-            <button
-              type="button"
-              class="delete-btn"
-              onclick="deleteTransaction('${transaction.id}')"
-            >
-              Delete
-            </button>
-
-          </div>
-        `;
-      })
+          `;
+        }
+      )
       .join("");
 }
 
@@ -1053,7 +1314,9 @@ function renderTransactions() {
 function renderRecentTransactions() {
 
   const container =
-    getElement("recentTransactions");
+    document.getElementById(
+      "recentTransactions"
+    );
 
 
   if (!container) {
@@ -1062,9 +1325,10 @@ function renderRecentTransactions() {
 
 
   const recent =
-    Array.isArray(transactions)
-      ? transactions.slice(0, 5)
-      : [];
+    transactions.slice(
+      0,
+      5
+    );
 
 
   if (recent.length === 0) {
@@ -1078,38 +1342,60 @@ function renderRecentTransactions() {
 
   container.innerHTML =
     recent
-      .map(function(transaction) {
+      .map(
+        transaction => {
 
-        const sign =
-          transaction.type === "income"
-            ? "+"
-            : "-";
+          const sign =
+            transaction.type ===
+            "income"
+              ? "+"
+              : "-";
 
 
-        return `
-          <div class="transaction">
+          const className =
+            transaction.type ===
+            "income"
+              ? "income"
+              : "expense";
 
-            <div class="transaction-info">
 
-              <strong>
-                ${escapeHTML(transaction.description)}
-              </strong>
+          return `
 
-              <small>
-                ${escapeHTML(transaction.category || "Other")}
-                •
-                ${formatDate(transaction.date)}
-              </small>
+            <div class="transaction">
+
+              <div class="transaction-info">
+
+                <strong>
+                  ${escapeHTML(
+                    transaction.description
+                  )}
+                </strong>
+
+                <small>
+                  ${escapeHTML(
+                    transaction.category ||
+                    "Other"
+                  )}
+                  •
+                  ${formatDate(
+                    transaction.date
+                  )}
+                </small>
+
+              </div>
+
+              <div class="${className}">
+                ${sign}
+                ${formatMoney(
+                  transaction.amount
+                )}
+              </div>
 
             </div>
 
-            <div class="${transaction.type}">
-              ${sign}${formatMoney(transaction.amount)}
-            </div>
-
-          </div>
-        `;
-      })
+          `;
+        }
+      )
       .join("");
 }
 
@@ -1121,7 +1407,10 @@ function renderRecentTransactions() {
 function openGoalModal() {
 
   const modal =
-    getElement("goalModal");
+    document.getElementById(
+      "goalModal"
+    );
+
 
   if (modal) {
 
@@ -1135,20 +1424,26 @@ function openGoalModal() {
 function addGoal() {
 
   const name =
-    getElement("goalName")
-      ?.value
-      .trim();
+    document.getElementById(
+      "goalName"
+    )?.value
+    .trim() ||
+    "";
+
 
   const target =
     Number(
-      getElement("goalTarget")
-        ?.value
+      document.getElementById(
+        "goalTarget"
+      )?.value
     );
+
 
   const saved =
     Number(
-      getElement("goalSaved")
-        ?.value
+      document.getElementById(
+        "goalSaved"
+      )?.value
     ) || 0;
 
 
@@ -1159,7 +1454,7 @@ function addGoal() {
   ) {
 
     alert(
-      "Please enter a goal name and valid target amount."
+      "Please enter a goal name and valid target."
     );
 
     return;
@@ -1168,44 +1463,47 @@ function addGoal() {
 
   goals.push({
 
-    id: Date.now(),
+    id:
+      Date.now(),
 
-    name: name,
+    name,
 
-    target: target,
+    target,
 
     saved:
-      Math.max(0, saved)
+      Math.max(
+        0,
+        saved
+      )
+
   });
 
 
   saveData();
 
-
-  const goalName =
-    getElement("goalName");
-
-  const goalTarget =
-    getElement("goalTarget");
-
-  const goalSaved =
-    getElement("goalSaved");
+  closeModal(
+    "goalModal"
+  );
 
 
-  if (goalName) {
-    goalName.value = "";
-  }
+  [
+    "goalName",
+    "goalTarget",
+    "goalSaved"
+  ]
+  .forEach(
+    id => {
 
-  if (goalTarget) {
-    goalTarget.value = "";
-  }
+      const element =
+        document.getElementById(id);
 
-  if (goalSaved) {
-    goalSaved.value = "";
-  }
+      if (element) {
+        element.value = "";
+      }
 
+    }
+  );
 
-  closeModal("goalModal");
 
   renderGoals();
 }
@@ -1215,7 +1513,7 @@ function deleteGoal(id) {
 
   if (
     !confirm(
-      "Are you sure you want to delete this savings goal?"
+      "Delete this savings goal?"
     )
   ) {
     return;
@@ -1224,12 +1522,9 @@ function deleteGoal(id) {
 
   goals =
     goals.filter(
-      function(goal) {
-
-        return String(goal.id) !==
-          String(id);
-
-      }
+      goal =>
+        String(goal.id) !==
+        String(id)
     );
 
 
@@ -1242,7 +1537,9 @@ function deleteGoal(id) {
 function renderGoals() {
 
   const container =
-    getElement("goalsList");
+    document.getElementById(
+      "goalsList"
+    );
 
 
   if (!container) {
@@ -1261,64 +1558,78 @@ function renderGoals() {
 
   container.innerHTML =
     goals
-      .map(function(goal) {
+      .map(
+        goal => {
 
-        const target =
-          Number(goal.target) || 0;
+          const target =
+            Number(
+              goal.target
+            ) || 0;
 
-        const saved =
-          Number(goal.saved) || 0;
 
-        const percentage =
-          target > 0
-            ? Math.min(
-                100,
-                Math.round(
-                  (saved / target) * 100
+          const saved =
+            Number(
+              goal.saved
+            ) || 0;
+
+
+          const percentage =
+            target > 0
+              ? Math.min(
+                  100,
+                  Math.round(
+                    (saved /
+                      target) *
+                    100
+                  )
                 )
-              )
-            : 0;
+              : 0;
 
 
-        return `
-          <div class="goal">
+          return `
 
-            <h3>
-              ${escapeHTML(goal.name)}
-            </h3>
+            <div class="goal">
 
-            <p>
-              ${formatMoney(saved)}
-              saved of
-              ${formatMoney(target)}
-            </p>
+              <h3>
+                ${escapeHTML(
+                  goal.name
+                )}
+              </h3>
 
-            <div class="progress">
+              <p>
+                ${formatMoney(saved)}
+                saved of
+                ${formatMoney(target)}
+              </p>
 
-              <div
-                class="progress-bar"
-                style="width:${percentage}%"
-              ></div>
+              <div class="progress">
+
+                <div
+                  class="progress-bar"
+                  style="width:${percentage}%"
+                ></div>
+
+              </div>
+
+              <strong>
+                ${percentage}% complete
+              </strong>
+
+              <br><br>
+
+              <button
+                type="button"
+                class="delete-btn"
+                onclick="window.deleteGoal(${goal.id})"
+              >
+                Delete
+              </button>
 
             </div>
 
-            <strong>
-              ${percentage}% complete
-            </strong>
-
-            <br><br>
-
-            <button
-              type="button"
-              class="delete-btn"
-              onclick="deleteGoal('${goal.id}')"
-            >
-              Delete
-            </button>
-
-          </div>
-        `;
-      })
+          `;
+        }
+      )
       .join("");
 }
 
@@ -1330,7 +1641,10 @@ function renderGoals() {
 function openInvestmentModal() {
 
   const modal =
-    getElement("investmentModal");
+    document.getElementById(
+      "investmentModal"
+    );
+
 
   if (modal) {
 
@@ -1344,20 +1658,26 @@ function openInvestmentModal() {
 function addInvestment() {
 
   const name =
-    getElement("investmentName")
-      ?.value
-      .trim();
+    document.getElementById(
+      "investmentName"
+    )?.value
+    .trim() ||
+    "";
+
 
   const amount =
     Number(
-      getElement("investmentAmount")
-        ?.value
+      document.getElementById(
+        "investmentAmount"
+      )?.value
     );
+
 
   const value =
     Number(
-      getElement("investmentValue")
-        ?.value
+      document.getElementById(
+        "investmentValue"
+      )?.value
     );
 
 
@@ -1377,49 +1697,47 @@ function addInvestment() {
 
   investments.push({
 
-    id: Date.now(),
+    id:
+      Date.now(),
 
-    name: name,
+    name,
 
-    amount: amount,
+    amount,
 
     value:
       Number.isFinite(value) &&
       value > 0
         ? value
         : amount
+
   });
 
 
   saveData();
 
-
-  const investmentName =
-    getElement("investmentName");
-
-  const investmentAmount =
-    getElement("investmentAmount");
-
-  const investmentValue =
-    getElement("investmentValue");
-
-
-  if (investmentName) {
-    investmentName.value = "";
-  }
-
-  if (investmentAmount) {
-    investmentAmount.value = "";
-  }
-
-  if (investmentValue) {
-    investmentValue.value = "";
-  }
-
-
   closeModal(
     "investmentModal"
   );
+
+
+  [
+    "investmentName",
+    "investmentAmount",
+    "investmentValue"
+  ]
+  .forEach(
+    id => {
+
+      const element =
+        document.getElementById(id);
+
+      if (element) {
+        element.value = "";
+      }
+
+    }
+  );
+
 
   renderInvestments();
 }
@@ -1429,7 +1747,7 @@ function deleteInvestment(id) {
 
   if (
     !confirm(
-      "Are you sure you want to delete this investment?"
+      "Delete this investment?"
     )
   ) {
     return;
@@ -1438,12 +1756,9 @@ function deleteInvestment(id) {
 
   investments =
     investments.filter(
-      function(investment) {
-
-        return String(investment.id) !==
-          String(id);
-
-      }
+      investment =>
+        String(investment.id) !==
+        String(id)
     );
 
 
@@ -1456,7 +1771,9 @@ function deleteInvestment(id) {
 function renderInvestments() {
 
   const container =
-    getElement("investmentsList");
+    document.getElementById(
+      "investmentsList"
+    );
 
 
   if (!container) {
@@ -1464,7 +1781,9 @@ function renderInvestments() {
   }
 
 
-  if (investments.length === 0) {
+  if (
+    investments.length === 0
+  ) {
 
     container.innerHTML =
       '<p class="empty">No investments recorded yet.</p>';
@@ -1475,61 +1794,122 @@ function renderInvestments() {
 
   container.innerHTML =
     investments
-      .map(function(investment) {
+      .map(
+        investment => {
 
-        const invested =
-          Number(investment.amount) || 0;
-
-        const value =
-          Number(investment.value) || 0;
-
-        const gain =
-          value - invested;
+          const invested =
+            Number(
+              investment.amount
+            ) || 0;
 
 
-        return `
-          <div class="investment">
+          const value =
+            Number(
+              investment.value
+            ) || 0;
 
-            <h3>
-              ${escapeHTML(investment.name)}
-            </h3>
 
-            <p>
-              Invested:
-              ${formatMoney(invested)}
-            </p>
+          const gain =
+            value -
+            invested;
 
-            <p>
-              Current value:
-              ${formatMoney(value)}
-            </p>
 
-            <strong
-              class="${
-                gain >= 0
-                  ? "income"
-                  : "expense"
-              }"
-            >
-              ${gain >= 0 ? "+" : ""}
-              ${formatMoney(gain)}
-            </strong>
+          return `
 
-            <br><br>
+            <div class="investment">
 
-            <button
-              type="button"
-              class="delete-btn"
-              onclick="deleteInvestment('${investment.id}')"
-            >
-              Delete
-            </button>
+              <h3>
+                ${escapeHTML(
+                  investment.name
+                )}
+              </h3>
 
-          </div>
-        `;
-      })
+              <p>
+                Invested:
+                ${formatMoney(
+                  invested
+                )}
+              </p>
+
+              <p>
+                Current value:
+                ${formatMoney(
+                  value
+                )}
+              </p>
+
+              <strong
+                class="${
+                  gain >= 0
+                    ? "income"
+                    : "expense"
+                }"
+              >
+                ${gain >= 0 ? "+" : ""}
+                ${formatMoney(
+                  gain
+                )}
+              </strong>
+
+              <br><br>
+
+              <button
+                type="button"
+                class="delete-btn"
+                onclick="window.deleteInvestment(${investment.id})"
+              >
+                Delete
+              </button>
+
+            </div>
+
+          `;
+        }
+      )
       .join("");
 }
+
+
+// ======================================================
+// CLOSE MODAL
+// ======================================================
+
+function closeModal(id) {
+
+  const modal =
+    document.getElementById(id);
+
+
+  if (modal) {
+
+    modal.classList.remove(
+      "show"
+    );
+  }
+}
+
+
+// ======================================================
+// CLOSE MODAL OUTSIDE
+// ======================================================
+
+document.addEventListener(
+  "click",
+  function(event) {
+
+    if (
+      event.target.classList.contains(
+        "modal"
+      )
+    ) {
+
+      event.target.classList.remove(
+        "show"
+      );
+    }
+
+  }
+);
 
 
 // ======================================================
@@ -1539,18 +1919,17 @@ function renderInvestments() {
 async function askAI() {
 
   const input =
-    getElement("aiInput");
+    document.getElementById(
+      "aiInput"
+    );
 
   const chat =
-    getElement("chatMessages");
+    document.getElementById(
+      "chatMessages"
+    );
 
 
   if (!input || !chat) {
-
-    console.error(
-      "AI input or chat container not found."
-    );
-
     return;
   }
 
@@ -1569,11 +1948,14 @@ async function askAI() {
     "user"
   );
 
+
   input.value = "";
 
 
   const thinking =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   thinking.className =
     "message ai";
@@ -1581,36 +1963,40 @@ async function askAI() {
   thinking.textContent =
     "MoneyMind AI is thinking...";
 
-  chat.appendChild(thinking);
+
+  chat.appendChild(
+    thinking
+  );
+
 
   chat.scrollTop =
     chat.scrollHeight;
 
 
-  const summary =
-    calculateFinancialSummary();
+  const financials =
+    calculateFinancials();
 
 
   const invested =
     investments.reduce(
-      function(sum, investment) {
-
-        return sum +
-          (Number(investment.amount) || 0);
-
-      },
+      (sum, investment) =>
+        sum +
+        Number(
+          investment.amount ||
+          0
+        ),
       0
     );
 
 
   const investmentValue =
     investments.reduce(
-      function(sum, investment) {
-
-        return sum +
-          (Number(investment.value) || 0);
-
-      },
+      (sum, investment) =>
+        sum +
+        Number(
+          investment.value ||
+          0
+        ),
       0
     );
 
@@ -1618,23 +2004,19 @@ async function askAI() {
   const financialSnapshot = {
 
     income:
-      summary.income,
+      financials.income,
 
     expenses:
-      summary.expenses,
+      financials.expenses,
 
     balance:
-      summary.balance,
+      financials.balance,
 
     savingsRate:
-      summary.income > 0
-        ? Number(
-            (
-              (summary.balance / summary.income) *
-              100
-            ).toFixed(1)
-          )
-        : 0,
+      Number(
+        financials.savingsRate
+          .toFixed(1)
+      ),
 
     investments:
       invested,
@@ -1643,7 +2025,8 @@ async function askAI() {
       investmentValue,
 
     investmentGain:
-      investmentValue - invested,
+      investmentValue -
+      invested,
 
     savingsGoals:
       goals,
@@ -1653,40 +2036,30 @@ async function askAI() {
 
     investmentRecords:
       investments
+
   };
 
 
-  if (!AI_URL) {
-
-    thinking.textContent =
-      "AI service is not configured.";
-
-    return;
-  }
-
-
-  const controller =
-    new AbortController();
-
-
-  const timeout =
-    setTimeout(
-      function() {
-
-        controller.abort();
-
-      },
-      20000
-    );
-
-
   try {
+
+    const controller =
+      new AbortController();
+
+
+    const timeout =
+      setTimeout(
+        () =>
+          controller.abort(),
+        15000
+      );
+
 
     const response =
       await fetch(
         AI_URL,
         {
-          method: "POST",
+          method:
+            "POST",
 
           headers: {
             "Content-Type":
@@ -1701,15 +2074,19 @@ async function askAI() {
 
               financialData:
                 financialSnapshot
+
             }),
 
           signal:
             controller.signal
+
         }
       );
 
 
-    clearTimeout(timeout);
+    clearTimeout(
+      timeout
+    );
 
 
     let data = {};
@@ -1723,15 +2100,9 @@ async function askAI() {
     } catch (error) {
 
       console.warn(
-        "AI returned invalid JSON."
+        "AI response was not JSON."
       );
     }
-
-
-    console.log(
-      "MoneyMind AI:",
-      data
-    );
 
 
     if (!response.ok) {
@@ -1747,12 +2118,10 @@ async function askAI() {
     thinking.textContent =
       data.reply ||
       data.message ||
-      "I received your question, but no answer was returned.";
+      "No AI response was returned.";
+
 
   } catch (error) {
-
-    clearTimeout(timeout);
-
 
     console.error(
       "MoneyMind AI error:",
@@ -1771,7 +2140,6 @@ async function askAI() {
     } else {
 
       thinking.textContent =
-        error.message ||
         "MoneyMind AI could not connect right now.";
     }
   }
@@ -1783,13 +2151,15 @@ async function askAI() {
 
 
 // ======================================================
-// QUICK QUESTIONS
+// QUICK QUESTION
 // ======================================================
 
 function quickQuestion(question) {
 
   const input =
-    getElement("aiInput");
+    document.getElementById(
+      "aiInput"
+    );
 
 
   if (!input) {
@@ -1799,6 +2169,7 @@ function quickQuestion(question) {
 
   input.value =
     question;
+
 
   askAI();
 }
@@ -1814,7 +2185,9 @@ function addChatMessage(
 ) {
 
   const container =
-    getElement("chatMessages");
+    document.getElementById(
+      "chatMessages"
+    );
 
 
   if (!container) {
@@ -1823,16 +2196,22 @@ function addChatMessage(
 
 
   const div =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
+
 
   div.className =
     "message " + type;
+
 
   div.textContent =
     message;
 
 
-  container.appendChild(div);
+  container.appendChild(
+    div
+  );
 
 
   container.scrollTop =
@@ -1841,60 +2220,33 @@ function addChatMessage(
 
 
 // ======================================================
-// MODALS
+// AI ENTER KEY
 // ======================================================
 
-function closeModal(id) {
+document.addEventListener(
+  "keydown",
+  function(event) {
 
-  const modal =
-    getElement(id);
+    if (
+      event.key === "Enter" &&
+      event.target &&
+      event.target.id === "aiInput"
+    ) {
 
+      event.preventDefault();
 
-  if (modal) {
-
-    modal.classList.remove(
-      "show"
-    );
-  }
-}
-
-
-// ======================================================
-// CLICK OUTSIDE MODAL
-// ======================================================
-
-function setupModalClose() {
-
-  window.addEventListener(
-    "click",
-    function(event) {
-
-      document
-        .querySelectorAll(".modal")
-        .forEach(function(modal) {
-
-          if (event.target === modal) {
-
-            modal.classList.remove(
-              "show"
-            );
-          }
-        });
+      askAI();
     }
-  );
-}
 
-
-// ======================================================
-// AUTH STATE LISTENER
-// ======================================================
-
-function setupAuthListener() {
-
-  if (!supabaseClient) {
-    return;
   }
+);
 
+
+// ======================================================
+// SUPABASE AUTH LISTENER
+// ======================================================
+
+if (supabaseClient) {
 
   supabaseClient.auth.onAuthStateChange(
     function(event, session) {
@@ -1905,10 +2257,7 @@ function setupAuthListener() {
       );
 
 
-      if (
-        session &&
-        session.user
-      ) {
+      if (session) {
 
         showApplication(
           session.user
@@ -1918,13 +2267,15 @@ function setupAuthListener() {
 
         showAuthentication();
       }
+
     }
   );
+
 }
 
 
 // ======================================================
-// INITIALIZE APPLICATION
+// INITIALIZE
 // ======================================================
 
 async function initializeApp() {
@@ -1934,37 +2285,20 @@ async function initializeApp() {
   );
 
 
-  transactions =
-    Array.isArray(transactions)
-      ? transactions
-      : [];
+  if (!Array.isArray(transactions)) {
+    transactions = [];
+  }
 
-  goals =
-    Array.isArray(goals)
-      ? goals
-      : [];
+  if (!Array.isArray(goals)) {
+    goals = [];
+  }
 
-  investments =
-    Array.isArray(investments)
-      ? investments
-      : [];
-
-
-  setupModalClose();
-
-  setupAuthListener();
+  if (!Array.isArray(investments)) {
+    investments = [];
+  }
 
 
   await checkAuth();
-
-
-  updateDashboard();
-
-  renderTransactions();
-
-  renderGoals();
-
-  renderInvestments();
 
 
   console.log(
@@ -1974,7 +2308,10 @@ async function initializeApp() {
 
 
 // ======================================================
-// EXPOSE FUNCTIONS TO HTML
+// EXPOSE FUNCTIONS
+//
+// THIS IS IMPORTANT.
+// HTML onclick="" USES window FUNCTIONS.
 // ======================================================
 
 window.showSignup =
@@ -1983,20 +2320,23 @@ window.showSignup =
 window.showLogin =
   showLogin;
 
-window.signupUser =
-  signupUser;
-
 window.loginUser =
   loginUser;
 
-window.showSection =
-  showSection;
+window.signupUser =
+  signupUser;
+
+window.logoutUser =
+  logoutUser;
 
 window.toggleMenu =
   toggleMenu;
 
 window.closeMenu =
   closeMenu;
+
+window.showSection =
+  showSection;
 
 window.openTransactionModal =
   openTransactionModal;
@@ -2025,18 +2365,18 @@ window.addInvestment =
 window.deleteInvestment =
   deleteInvestment;
 
+window.closeModal =
+  closeModal;
+
 window.askAI =
   askAI;
 
 window.quickQuestion =
   quickQuestion;
 
-window.closeModal =
-  closeModal;
-
 
 // ======================================================
-// START APPLICATION
+// START
 // ======================================================
 
 if (
@@ -2052,10 +2392,10 @@ if (
 } else {
 
   initializeApp();
+
 }
 
 
 console.log(
   "MoneyMind app.js loaded successfully."
 );
-```
