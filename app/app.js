@@ -251,7 +251,52 @@ function escapeHTML(value) {
   return div.innerHTML;
 }
 
+// ==========================================
+// NAVIGATION
+// ==========================================
 
+function showSection(sectionId) {
+
+  document
+    .querySelectorAll(".section")
+    .forEach(function (section) {
+      section.classList.remove("active");
+    });
+
+  const section =
+    document.getElementById(sectionId);
+
+  if (section) {
+    section.classList.add("active");
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  const menu =
+    document.getElementById("mobileMenu");
+
+  if (menu) {
+    menu.style.display = "none";
+  }
+}
+
+
+function toggleMenu() {
+
+  const menu =
+    document.getElementById("mobileMenu");
+
+  if (!menu) return;
+
+  if (menu.style.display === "flex") {
+    menu.style.display = "none";
+  } else {
+    menu.style.display = "flex";
+  }
+}
 // ==========================================
 // EXPOSE FUNCTIONS TO HTML
 // ==========================================
