@@ -575,78 +575,53 @@ function showSection(sectionId) {
 // ======================================================
 // MENU
 // ======================================================
+// ======================================================
+// MOBILE MENU
+// ======================================================
 
 function toggleMenu() {
 
   const menu =
-    document.getElementById(
-      "mobileMenu"
-    );
+    document.getElementById("mobileMenu");
 
   const button =
-    document.getElementById(
-      "menuButton"
-    );
+    document.querySelector(".menu-btn");
 
   if (!menu) {
-
-    console.error(
-      "mobileMenu not found"
-    );
-
+    console.error("mobileMenu not found.");
     return;
   }
 
+  const isOpen =
+    menu.classList.contains("open");
 
-  menu.classList.toggle(
-    "open"
-  );
+  if (isOpen) {
 
+    menu.classList.remove("open");
 
-  const opened =
-    menu.classList.contains(
-      "open"
-    );
+    if (button) {
+      button.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+    }
 
+    console.log("Menu closed.");
 
-  if (button) {
+  } else {
 
-    button.setAttribute(
-      "aria-expanded",
-      opened ? "true" : "false"
-    );
+    menu.classList.add("open");
+
+    if (button) {
+      button.setAttribute(
+        "aria-expanded",
+        "true"
+      );
+    }
+
+    console.log("Menu opened.");
   }
 }
-
-
-function closeMenu() {
-
-  const menu =
-    document.getElementById(
-      "mobileMenu"
-    );
-
-  const button =
-    document.getElementById(
-      "menuButton"
-    );
-
-  if (menu) {
-
-    menu.classList.remove(
-      "open"
-    );
-  }
-
-  if (button) {
-
-    button.setAttribute(
-      "aria-expanded",
-      "false"
-    );
-  }
-}
-
 
 // ======================================================
 // TRANSACTION MODAL
