@@ -420,3 +420,14 @@ window.showSignup = showSignup;
 window.showLogin = showLogin;
 window.signupUser = signupUser;
 window.loginUser = loginUser;
+window.toggleMenu = function () {
+  const menu = document.getElementById("mobileMenu");
+
+  if (!menu) return;
+
+  if (menu.style.display === "flex") {
+    menu.style.display = "none";
+  } else {
+    menu.style.display = "flex";
+  }
+};
