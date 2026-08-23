@@ -1208,5 +1208,8 @@ function showLogin() {
   document.getElementById("signupForm").style.display = "none";
   document.getElementById("loginForm").style.display = "block";
   document.getElementById("authMessage").textContent = "";
-}
+}window.showSignup = showSignup;
+window.showLogin = showLogin;
+window.signupUser = signupUser;
+window.loginUser = loginUser;
 
